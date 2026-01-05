@@ -1,0 +1,262 @@
+---
+title: Admin API
+description: Manage kafka.do topics and consumer groups
+---
+
+The Admin API provides topic and consumer group management operations including creation, configuration, and monitoring.
+
+## Basic Usage
+
+```typescript
+import { createAdmin } from 'kafka.do'
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const admin = createAdmin(env)
+
+    // Create a topic with 3 partitions
+    await admin.createTopic({
+      topic: 'orders',
+      partitions: 3,
+      config: {
+        'retention.ms': '604800000' // 7 days
+      }
+    })
+
+    // List all topics
+    const topics = await admin.listTopics()
+    console.log('Topics:', topics)
+
+    await admin.close()
+    return new Response('Admin operations complete')
+  }
+}
+```
+
+## Configuration
+
+Create an admin client with custom configuration:
+
+```typescript
+const admin = createAdmin(env, {
+  clientId: 'my-admin',
+  requestTimeoutMs: 30000
+})
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `clientId` | `string` | `undefined` | Client identifier for tracking |
+| `requestTimeoutMs` | `number` | `undefined` | Request timeout in milliseconds |
+
+## Topic Management
+
+### createTopic(config)
+
+Create a new topic:
+
+```typescript
+await admin.createTopic({
+  topic: 'orders',
+  partitions: 3,
+  config: {
+    'retention.ms': '604800000' // 7 days
+  }
+})
+```
+
+### deleteTopic(topic)
+
+Delete a topic and all its data:
+
+```typescript
+await admin.deleteTopic('old-topic')
+```
+
+### listTopics()
+
+List all topics:
+
+```typescript
+const topics = await admin.listTopics()
+// Returns: string[]
+```
+
+### describeTopic(topic)
+
+Get detailed topic metadata:
+
+```typescript
+const metadata = await admin.describeTopic('orders')
+
+// metadata contains:
+// - name: string
+// - partitions: Array<{
+//     partition: number
+//     leader: string
+//     replicas: string[]
+//   }>
+// - config: Record<string, string>
+
+console.log('Partitions:', metadata.partitions.length)
+```
+
+### createPartitions(topic, count)
+
+Add more partitions to an existing topic:
+
+```typescript
+// Increase 'orders' topic from 3 to 6 partitions
+await admin.createPartitions('orders', 6)
+```
+
+### listOffsets(topic)
+
+Get partition offsets for a topic:
+
+```typescript
+const offsets = await admin.listOffsets('orders')
+
+for (const [partition, info] of offsets) {
+  console.log(`Partition ${partition}: earliest=${info.earliest}, latest=${info.latest}`)
+}
+```
+
+## Consumer Group Management
+
+### listGroups()
+
+List all consumer groups:
+
+```typescript
+const groups = await admin.listGroups()
+// Returns: string[]
+```
+
+### describeGroup(groupId)
+
+Get detailed consumer group information:
+
+```typescript
+const groupInfo = await admin.describeGroup('order-processor')
+
+// groupInfo contains:
+// - groupId: string
+// - state: 'Stable' | 'PreparingRebalance' | 'CompletingRebalance' | 'Empty' | 'Dead'
+// - protocol: string
+// - members: Array<{
+//     memberId: string
+//     clientId: string
+//     assignments: Array<{ topic: string, partitions: number[] }>
+//   }>
+
+console.log('Group state:', groupInfo.state)
+console.log('Members:', groupInfo.members.length)
+```
+
+### deleteGroup(groupId)
+
+Delete a consumer group:
+
+```typescript
+await admin.deleteGroup('old-group')
+```
+
+## Complete Example
+
+```typescript
+import { createAdmin } from 'kafka.do'
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const admin = createAdmin(env)
+
+    // Create a topic with 3 partitions
+    await admin.createTopic({
+      topic: 'orders',
+      partitions: 3,
+      config: {
+        'retention.ms': '604800000' // 7 days
+      }
+    })
+
+    // List all topics
+    const topics = await admin.listTopics()
+    console.log('Topics:', topics)
+
+    // Describe a topic
+    const metadata = await admin.describeTopic('orders')
+    console.log('Partitions:', metadata.partitions.length)
+
+    // Add more partitions
+    await admin.createPartitions('orders', 6)
+
+    // List consumer groups
+    const groups = await admin.listGroups()
+    console.log('Consumer groups:', groups)
+
+    // Describe a consumer group
+    const groupInfo = await admin.describeGroup('order-processor')
+    console.log('Group state:', groupInfo.state)
+    console.log('Members:', groupInfo.members.length)
+
+    // Get partition offsets
+    const offsets = await admin.listOffsets('orders')
+    for (const [partition, info] of offsets) {
+      console.log(`Partition ${partition}: earliest=${info.earliest}, latest=${info.latest}`)
+    }
+
+    // Cleanup
+    await admin.deleteTopic('old-topic')
+    await admin.deleteGroup('old-group')
+
+    await admin.close()
+    return new Response('Admin operations complete')
+  }
+}
+```
+
+## HTTP API
+
+Admin REST endpoints:
+
+### Topic Endpoints
+
+```bash
+# List topics
+curl https://kafka.example.workers.dev/admin/topics
+
+# Create topic
+curl -X POST https://kafka.example.workers.dev/admin/topics \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "orders", "partitions": 3}'
+
+# Describe topic
+curl https://kafka.example.workers.dev/admin/topics/orders
+
+# Delete topic
+curl -X DELETE https://kafka.example.workers.dev/admin/topics/orders
+
+# Add partitions
+curl -X POST https://kafka.example.workers.dev/admin/topics/orders/partitions \
+  -H "Content-Type: application/json" \
+  -d '{"count": 6}'
+
+# Get topic offsets
+curl https://kafka.example.workers.dev/admin/topics/orders/offsets
+```
+
+### Consumer Group Endpoints
+
+```bash
+# List consumer groups
+curl https://kafka.example.workers.dev/admin/groups
+
+# Describe consumer group
+curl https://kafka.example.workers.dev/admin/groups/order-processor
+
+# Delete consumer group
+curl -X DELETE https://kafka.example.workers.dev/admin/groups/order-processor
+```

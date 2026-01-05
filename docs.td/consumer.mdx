@@ -1,0 +1,248 @@
+---
+title: Consumer API
+description: Consume messages from kafka.do topics with consumer groups
+---
+
+The Consumer API provides coordinated message consumption with automatic partition assignment, offset management, and consumer group coordination.
+
+## Basic Usage
+
+```typescript
+import { createConsumer } from 'kafka.do'
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const consumer = createConsumer(env, {
+      groupId: 'order-processor',
+      clientId: 'worker-1',
+      autoCommit: true,
+      fromBeginning: false
+    })
+
+    // Subscribe to topics
+    await consumer.subscribe(['orders'])
+
+    // Poll for messages
+    const records = await consumer.poll(1000)
+
+    for (const record of records) {
+      console.log(`Received: ${record.key} = ${JSON.stringify(record.value)}`)
+      console.log(`Topic: ${record.topic}, Partition: ${record.partition}, Offset: ${record.offset}`)
+    }
+
+    await consumer.close()
+    return new Response(`Processed ${records.length} messages`)
+  }
+}
+```
+
+## Configuration
+
+Create a consumer with custom configuration:
+
+```typescript
+const consumer = createConsumer(env, {
+  groupId: 'my-group',
+  clientId: 'worker-1',
+  sessionTimeoutMs: 30000,
+  heartbeatIntervalMs: 3000,
+  maxPollRecords: 500,
+  autoCommit: true,
+  autoCommitIntervalMs: 5000,
+  fromBeginning: false,
+  rebalanceTimeoutMs: 60000
+})
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `groupId` | `string` | *required* | Consumer group ID for coordinated consumption |
+| `clientId` | `string` | `'do-consumer'` | Client identifier for tracking |
+| `sessionTimeoutMs` | `number` | `30000` | Session timeout before consumer is removed from group |
+| `heartbeatIntervalMs` | `number` | `3000` | Heartbeat interval to maintain group membership |
+| `maxPollRecords` | `number` | `500` | Maximum records returned per poll |
+| `autoCommit` | `boolean` | `true` | Enable automatic offset commits |
+| `autoCommitIntervalMs` | `number` | `5000` | Auto-commit interval |
+| `fromBeginning` | `boolean` | `false` | Start from earliest offset on first join |
+| `rebalanceTimeoutMs` | `number` | `60000` | Timeout for rebalance operations |
+
+## Methods
+
+### subscribe(topics)
+
+Subscribe to one or more topics:
+
+```typescript
+await consumer.subscribe(['orders', 'events'])
+```
+
+### unsubscribe()
+
+Unsubscribe from all topics:
+
+```typescript
+await consumer.unsubscribe()
+```
+
+### poll(timeout?)
+
+Poll for available records:
+
+```typescript
+const records = await consumer.poll(1000) // 1 second timeout
+
+for (const record of records) {
+  // record contains:
+  // - topic: string
+  // - partition: number
+  // - offset: number
+  // - key: string | null
+  // - value: any
+  // - headers: Record<string, string>
+  // - timestamp: number
+}
+```
+
+### commit()
+
+Commit current offsets (when autoCommit is false):
+
+```typescript
+const consumer = createConsumer(env, {
+  groupId: 'my-group',
+  autoCommit: false
+})
+
+await consumer.subscribe(['orders'])
+const records = await consumer.poll()
+
+// Process records...
+
+await consumer.commit() // Commit after successful processing
+```
+
+### commitSync(offsets?)
+
+Commit specific offsets:
+
+```typescript
+await consumer.commitSync({
+  'orders': { 0: 100, 1: 50 },
+  'events': { 0: 200 }
+})
+```
+
+### seek(partition, offset)
+
+Seek to a specific offset:
+
+```typescript
+await consumer.seek({ topic: 'orders', partition: 0 }, 100)
+```
+
+### pause(partitions) / resume(partitions)
+
+Pause and resume consumption:
+
+```typescript
+await consumer.pause([{ topic: 'orders', partition: 0 }])
+// ... later
+await consumer.resume([{ topic: 'orders', partition: 0 }])
+```
+
+### close()
+
+Close the consumer and leave the group:
+
+```typescript
+await consumer.close()
+```
+
+## Async Iterator
+
+Consume messages using an async iterator for cleaner code:
+
+```typescript
+const consumer = createConsumer(env, { groupId: 'my-group' })
+await consumer.subscribe(['orders'])
+
+for await (const record of consumer) {
+  console.log(`Processing: ${record.key}`)
+  // Process each record as it arrives
+}
+```
+
+## Rebalance Listener
+
+Handle partition assignment and revocation events:
+
+```typescript
+const consumer = createConsumer(env, { groupId: 'my-group' }, {
+  async onPartitionsAssigned(partitions) {
+    console.log('Assigned partitions:', partitions)
+    // Initialize resources for assigned partitions
+  },
+  async onPartitionsRevoked(partitions) {
+    console.log('Revoked partitions:', partitions)
+    // Clean up resources, commit offsets
+  }
+})
+```
+
+## Consumer Groups
+
+Consumer groups enable parallel processing by distributing partitions across multiple consumers:
+
+```typescript
+// Worker 1
+const consumer1 = createConsumer(env, {
+  groupId: 'order-processor',
+  clientId: 'worker-1'
+})
+
+// Worker 2 (different worker instance)
+const consumer2 = createConsumer(env, {
+  groupId: 'order-processor',
+  clientId: 'worker-2'
+})
+
+// Partitions are automatically distributed between workers
+```
+
+## HTTP API
+
+Consumer endpoints for external access:
+
+### GET /topics/:topic/partitions/:partition/messages
+
+Read messages from a partition:
+
+```bash
+curl "https://kafka.example.workers.dev/topics/orders/partitions/0/messages?offset=0&limit=100"
+```
+
+### Consumer Group Endpoints
+
+```bash
+# Join a consumer group
+curl -X POST https://kafka.example.workers.dev/consumer-groups/my-group/join \
+  -H "Content-Type: application/json" \
+  -d '{"clientId": "client-1", "topics": ["orders"]}'
+
+# Send heartbeat
+curl -X POST https://kafka.example.workers.dev/consumer-groups/my-group/heartbeat \
+  -H "Content-Type: application/json" \
+  -d '{"memberId": "member-123"}'
+
+# Commit offsets
+curl -X POST https://kafka.example.workers.dev/consumer-groups/my-group/commit \
+  -H "Content-Type: application/json" \
+  -d '{"memberId": "member-123", "offsets": {"orders": {"0": 100}}}'
+
+# Leave group
+curl -X POST https://kafka.example.workers.dev/consumer-groups/my-group/leave \
+  -H "Content-Type: application/json" \
+  -d '{"memberId": "member-123"}'
+```

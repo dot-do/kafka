@@ -1,0 +1,230 @@
+---
+title: HTTP Client
+description: Access kafka.do from any JavaScript runtime
+---
+
+The HTTP Client SDK allows you to interact with kafka.do from any JavaScript environment - Node.js, Deno, Bun, browsers, or other edge runtimes. It provides the same familiar producer, consumer, and admin interfaces over HTTP.
+
+## Installation
+
+```bash
+npm install kafka.do
+```
+
+## Basic Setup
+
+```typescript
+import { KafkaClient } from 'kafka.do/client'
+
+const client = new KafkaClient({
+  baseUrl: 'https://kafka.your-domain.workers.dev',
+  clientId: 'my-app',
+  timeout: 30000,
+  headers: {
+    'Authorization': 'Bearer your-token'
+  }
+})
+
+// Check service health
+const health = await client.health()
+console.log('Status:', health.status)
+```
+
+## Configuration
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `baseUrl` | `string` | *required* | URL of your kafka.do deployment |
+| `clientId` | `string` | auto-generated | Client identifier for tracking |
+| `timeout` | `number` | `30000` | Request timeout in milliseconds |
+| `headers` | `object` | `{}` | Default headers for all requests |
+| `fetch` | `function` | `globalThis.fetch` | Custom fetch implementation |
+
+## Producer Operations
+
+```typescript
+const producer = client.producer({ defaultTopic: 'events' })
+
+// Send a single message
+await producer.send({
+  key: 'user-123',
+  value: { type: 'page_view', page: '/home' }
+})
+
+// Send to a specific topic
+await producer.send({
+  topic: 'orders',
+  key: 'order-123',
+  value: { amount: 99.99 }
+})
+
+// Send multiple messages in a batch
+await producer.sendBatch([
+  { key: 'user-123', value: { type: 'click', button: 'signup' } },
+  { key: 'user-456', value: { type: 'page_view', page: '/about' } }
+])
+```
+
+## Consumer Operations
+
+```typescript
+const consumer = client.consumer({
+  groupId: 'analytics-processor',
+  topics: ['events'],
+  autoCommit: true
+})
+
+// Connect and join consumer group
+const joinResult = await consumer.connect()
+console.log('Member ID:', joinResult.memberId)
+
+// Fetch messages from a partition
+const { messages } = await consumer.fetch('events', 0, { offset: 0, limit: 100 })
+
+for (const msg of messages) {
+  console.log(`${msg.key}: ${JSON.stringify(msg.value)}`)
+}
+
+// Commit offsets
+await consumer.commit()
+
+// Get partition offsets
+const offsets = await consumer.getOffsets('events', 0)
+console.log(`Earliest: ${offsets.earliest}, Latest: ${offsets.latest}`)
+
+// Disconnect from consumer group
+await consumer.disconnect()
+```
+
+## Admin Operations
+
+```typescript
+const admin = client.admin()
+
+// Create a topic
+await admin.createTopic({ topic: 'logs', partitions: 5 })
+
+// List topics
+const topics = await admin.listTopics()
+console.log('Topics:', topics)
+
+// Describe a topic
+const topicInfo = await admin.describeTopic('logs')
+console.log('Partitions:', topicInfo.partitions.length)
+
+// Add partitions
+await admin.addPartitions('logs', 10)
+
+// List consumer groups
+const groups = await admin.listGroups()
+
+// Describe a consumer group
+const groupInfo = await admin.describeGroup('analytics-processor')
+console.log('State:', groupInfo.state)
+
+// Delete resources
+await admin.deleteTopic('old-logs')
+await admin.deleteGroup('old-group')
+```
+
+## Complete Example
+
+```typescript
+import { KafkaClient } from 'kafka.do/client'
+
+// Initialize client
+const client = new KafkaClient({
+  baseUrl: 'https://kafka.your-domain.workers.dev',
+  clientId: 'my-app',
+  timeout: 30000,
+  headers: {
+    'Authorization': 'Bearer your-token'
+  }
+})
+
+// Check health
+const health = await client.health()
+console.log('Status:', health.status)
+
+// Create admin and ensure topic exists
+const admin = client.admin()
+const topics = await admin.listTopics()
+
+if (!topics.includes('events')) {
+  await admin.createTopic({ topic: 'events', partitions: 3 })
+  console.log('Created events topic')
+}
+
+// Produce some messages
+const producer = client.producer({ defaultTopic: 'events' })
+
+await producer.sendBatch([
+  { key: 'user-1', value: { type: 'login', timestamp: Date.now() } },
+  { key: 'user-2', value: { type: 'page_view', page: '/home' } },
+  { key: 'user-1', value: { type: 'click', button: 'buy' } }
+])
+
+console.log('Produced 3 messages')
+
+// Consume messages
+const consumer = client.consumer({
+  groupId: 'event-processor',
+  topics: ['events'],
+  autoCommit: true
+})
+
+const joinResult = await consumer.connect()
+console.log('Joined group as:', joinResult.memberId)
+
+const { messages } = await consumer.fetch('events', 0, { offset: 0, limit: 100 })
+
+for (const msg of messages) {
+  console.log(`[${msg.key}] ${msg.value.type}`)
+}
+
+await consumer.commit()
+await consumer.disconnect()
+
+console.log('Processing complete')
+```
+
+## Using in Different Runtimes
+
+### Node.js
+
+```typescript
+import { KafkaClient } from 'kafka.do/client'
+
+const client = new KafkaClient({
+  baseUrl: process.env.KAFKA_DO_URL
+})
+```
+
+### Browser
+
+```typescript
+import { KafkaClient } from 'kafka.do/client'
+
+const client = new KafkaClient({
+  baseUrl: 'https://kafka.example.workers.dev',
+  headers: {
+    'Authorization': `Bearer ${getAuthToken()}`
+  }
+})
+```
+
+### Custom Fetch
+
+Use a custom fetch implementation for environments without native fetch or for custom behavior:
+
+```typescript
+import { KafkaClient } from 'kafka.do/client'
+import nodeFetch from 'node-fetch'
+
+const client = new KafkaClient({
+  baseUrl: 'https://kafka.example.workers.dev',
+  fetch: nodeFetch as unknown as typeof fetch
+})
+```

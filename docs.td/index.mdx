@@ -1,18 +1,94 @@
 ---
-title: Welcome
-description: Documentation for kafka.do
+title: Introduction
+description: Kafka-compatible streaming platform on Cloudflare Workers
 ---
 
-# Welcome to kafka.do
+kafka.do brings the familiar Kafka programming model to the edge, running entirely on Cloudflare's global network. Each topic partition is backed by a Durable Object with SQLite storage, providing strong consistency and durability without managing any infrastructure.
 
-Kafka-compatible streaming platform on Cloudflare Workers with Durable Object SQLite
+## Quick Start
 
-## Getting Started
+Install the package:
 
-Add your getting started guide here.
+```bash
+npm install kafka.do
+```
+
+Send your first message:
+
+```typescript
+import { createProducer } from 'kafka.do'
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const producer = createProducer(env)
+
+    const metadata = await producer.send({
+      topic: 'orders',
+      key: 'order-123',
+      value: { orderId: '123', amount: 99.99 },
+      headers: { source: 'web' }
+    })
+
+    console.log(`Message sent to partition ${metadata.partition} at offset ${metadata.offset}`)
+    await producer.close()
+
+    return new Response('Message sent')
+  }
+}
+```
 
 ## Features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- **Kafka-compatible API** - Familiar producer, consumer, and admin interfaces that match Kafka's programming model
+- **Edge-native** - Runs on Cloudflare Workers with global distribution and low latency
+- **Durable storage** - Messages stored in Durable Object SQLite with strong consistency guarantees
+- **Consumer groups** - Coordinated consumption with automatic partition assignment and rebalancing
+- **Offset management** - Automatic and manual offset commits for at-least-once delivery
+- **HTTP Client SDK** - Access kafka.do from any JavaScript runtime, not just Workers
+- **Partitioning** - Key-based partitioning ensures message ordering within partitions
+- **Batch operations** - Efficient batch produce and consume for high throughput
+
+## Configuration
+
+Add the following Durable Object bindings to your `wrangler.toml`:
+
+```toml
+name = "my-kafka-app"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[durable_objects]
+bindings = [
+  { name = "TOPIC_PARTITION", class_name = "TopicPartitionDO" },
+  { name = "CONSUMER_GROUP", class_name = "ConsumerGroupDO" },
+  { name = "CLUSTER_METADATA", class_name = "ClusterMetadataDO" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TopicPartitionDO", "ConsumerGroupDO", "ClusterMetadataDO"]
+```
+
+Define your environment type:
+
+```typescript
+interface Env {
+  TOPIC_PARTITION: DurableObjectNamespace
+  CONSUMER_GROUP: DurableObjectNamespace
+  CLUSTER_METADATA: DurableObjectNamespace
+}
+```
+
+## Requirements
+
+- Cloudflare Workers environment
+- Durable Objects with SQLite storage enabled
+- Node.js 18+ (for local development)
+
+## Next Steps
+
+- [Producer API](/producer) - Send messages to topics
+- [Consumer API](/consumer) - Consume messages with consumer groups
+- [Admin API](/admin) - Manage topics and consumer groups
+- [HTTP Client](/http-client) - Access kafka.do from any JavaScript runtime

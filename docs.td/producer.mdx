@@ -1,0 +1,163 @@
+---
+title: Producer API
+description: Send messages to kafka.do topics
+---
+
+The Producer API lets you send messages to topics within a Cloudflare Worker. Messages are automatically partitioned based on keys and stored durably in Durable Object SQLite.
+
+## Basic Usage
+
+```typescript
+import { createProducer } from 'kafka.do'
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const producer = createProducer(env)
+
+    // Send a single message
+    const metadata = await producer.send({
+      topic: 'orders',
+      key: 'order-123',
+      value: { orderId: '123', amount: 99.99 },
+      headers: { source: 'web' }
+    })
+
+    console.log(`Message sent to partition ${metadata.partition} at offset ${metadata.offset}`)
+
+    await producer.close()
+    return new Response('Message sent')
+  }
+}
+```
+
+## Batch Operations
+
+Send multiple messages efficiently in a single batch:
+
+```typescript
+const producer = createProducer(env)
+
+const results = await producer.sendBatch([
+  { topic: 'orders', key: 'order-124', value: { orderId: '124', amount: 49.99 } },
+  { topic: 'orders', key: 'order-125', value: { orderId: '125', amount: 149.99 } }
+])
+
+for (const metadata of results) {
+  console.log(`Sent to partition ${metadata.partition} at offset ${metadata.offset}`)
+}
+
+await producer.close()
+```
+
+## Configuration
+
+Create a producer with custom configuration:
+
+```typescript
+const producer = createProducer(env, {
+  clientId: 'my-producer',
+  batchSize: 100,
+  lingerMs: 5,
+  acks: 'all',
+  retries: 3
+})
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `clientId` | `string` | `undefined` | Client identifier for tracking and logging |
+| `batchSize` | `number` | `undefined` | Number of messages to batch before sending |
+| `lingerMs` | `number` | `undefined` | Time to wait for batch to fill (milliseconds) |
+| `acks` | `0 \| 1 \| 'all'` | `undefined` | Acknowledgment mode for durability guarantees |
+| `retries` | `number` | `undefined` | Number of retry attempts on failure |
+
+## Methods
+
+### send(record)
+
+Send a single message to a topic. Returns metadata about the sent message.
+
+```typescript
+const metadata = await producer.send({
+  topic: 'orders',
+  key: 'order-123',           // Optional: used for partitioning
+  value: { orderId: '123' },  // Message payload (auto-serialized)
+  headers: { source: 'api' }  // Optional: message headers
+})
+
+// metadata contains:
+// - topic: string
+// - partition: number
+// - offset: number
+// - timestamp: number
+```
+
+### sendBatch(records)
+
+Send multiple messages in a single batch. Returns an array of metadata for each message.
+
+```typescript
+const results = await producer.sendBatch([
+  { topic: 'orders', key: 'order-1', value: { amount: 10 } },
+  { topic: 'orders', key: 'order-2', value: { amount: 20 } },
+  { topic: 'events', key: 'event-1', value: { type: 'click' } }
+])
+```
+
+### flush()
+
+Flush any buffered messages immediately.
+
+```typescript
+await producer.flush()
+```
+
+### close()
+
+Close the producer and release resources. Always call this when done.
+
+```typescript
+await producer.close()
+```
+
+## Partitioning
+
+Messages with the same key are always sent to the same partition, guaranteeing ordering for that key:
+
+```typescript
+// All orders for user-123 go to the same partition
+await producer.send({ topic: 'orders', key: 'user-123', value: order1 })
+await producer.send({ topic: 'orders', key: 'user-123', value: order2 })
+await producer.send({ topic: 'orders', key: 'user-123', value: order3 })
+```
+
+Messages without a key are distributed across partitions using round-robin.
+
+## HTTP API
+
+Produce messages via REST endpoints when accessing from outside Workers:
+
+### POST /topics/:topic/produce
+
+Produce a single message:
+
+```bash
+curl -X POST https://kafka.example.workers.dev/topics/orders/produce \
+  -H "Content-Type: application/json" \
+  -d '{"key": "order-123", "value": {"amount": 99.99}}'
+```
+
+### POST /topics/:topic/produce-batch
+
+Produce multiple messages:
+
+```bash
+curl -X POST https://kafka.example.workers.dev/topics/orders/produce-batch \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"key": "order-1", "value": {"amount": 10}},
+    {"key": "order-2", "value": {"amount": 20}}
+  ]'
+```
