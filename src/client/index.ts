@@ -1,14 +1,14 @@
 /**
- * Kafdo Client SDK
+ * kafka.do Client SDK
  *
- * A lightweight client for interacting with Kafdo from any JavaScript/TypeScript environment.
+ * A lightweight client for interacting with kafka.do from any JavaScript/TypeScript environment.
  * Works in browsers, Node.js, Cloudflare Workers, and other runtimes.
  */
 
-export { KafdoClient, type KafdoClientConfig } from './client'
-export { KafdoProducerClient, type ProducerOptions } from './producer'
-export { KafdoConsumerClient, type ConsumerOptions } from './consumer'
-export { KafdoAdminClient } from './admin'
+export { KafkaClient, type KafkaClientConfig } from './client'
+export { KafkaProducerClient, type ProducerOptions } from './producer'
+export { KafkaConsumerClient, type ConsumerOptions } from './consumer'
+export { KafkaAdminClient } from './admin'
 
 // Re-export useful types from records
 export type {

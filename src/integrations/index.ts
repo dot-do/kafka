@@ -1,13 +1,13 @@
 /**
- * Kafdo Integrations
+ * kafka.do Integrations
  *
  * Pre-built integrations for common data sources and sinks.
  */
 
 // MongoDB CDC Integration
 export {
-  KafdoPipeline,
-  createKafdoPipeline,
+  KafkaPipeline,
+  createKafkaPipeline,
   createFixedTopicPipeline,
   createDatabaseTopicPipeline,
   createCollectionTopicPipeline,
@@ -16,7 +16,7 @@ export {
   isUpdateEvent,
   isDeleteEvent,
   type Pipeline,
-  type KafdoPipelineConfig,
+  type KafkaPipelineConfig,
   type CDCEvent,
   type InsertEvent,
   type UpdateEvent,

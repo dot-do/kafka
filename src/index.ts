@@ -166,13 +166,13 @@ function payloadTooLarge(c: Context, message: string) {
 }
 
 // Re-export API classes
-export { KafdoProducer, createProducer } from './api/producer'
-export { KafdoConsumer, createConsumer } from './api/consumer'
-export { KafdoAdmin, createAdmin } from './api/admin'
+export { KafkaProducer, createProducer } from './api/producer'
+export { KafkaConsumer, createConsumer } from './api/consumer'
+export { KafkaAdmin, createAdmin } from './api/admin'
 
 // Re-export error classes
 export {
-  KafdoError,
+  KafkaError,
   TopicNotFoundError,
   PartitionNotFoundError,
   ConsumerGroupError,
@@ -248,7 +248,7 @@ app.use('*', async (c, next) => {
 // Health and info endpoints
 app.get('/', (c) => {
   return c.json({
-    name: 'kafdo',
+    name: 'kafka.do',
     description: 'Kafka-compatible streaming platform on Cloudflare Workers',
     version,
     status: 'ok',

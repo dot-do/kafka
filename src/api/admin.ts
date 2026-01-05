@@ -1,5 +1,5 @@
 /**
- * Admin API - High-level interface for managing Kafdo topics and groups
+ * Admin API - High-level interface for managing kafka.do topics and groups
  */
 
 import type { Env } from '../index'
@@ -12,12 +12,12 @@ import type {
   OffsetInfo,
   PartitionMetadata,
 } from '../types/admin'
-import { TopicNotFoundError, ConsumerGroupError, KafdoError } from '../errors'
+import { TopicNotFoundError, ConsumerGroupError, KafkaError } from '../errors'
 
 /**
- * KafdoAdmin - Manages Kafdo topics and consumer groups
+ * KafkaAdmin - Manages kafka.do topics and consumer groups
  */
-export class KafdoAdmin implements Admin {
+export class KafkaAdmin implements Admin {
   private env: Env
 
   constructor(env: Env, _config: AdminConfig = {}) {
@@ -51,7 +51,7 @@ export class KafdoAdmin implements Admin {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new KafdoError('TOPIC_CREATE_FAILED', `Failed to create topic: ${error}`)
+      throw new KafkaError('TOPIC_CREATE_FAILED', `Failed to create topic: ${error}`)
     }
   }
 
@@ -78,7 +78,7 @@ export class KafdoAdmin implements Admin {
 
     const response = await metadataStub.fetch('http://localhost/topics')
     if (!response.ok) {
-      throw new KafdoError('LIST_TOPICS_FAILED', `Failed to list topics: ${response.statusText}`)
+      throw new KafkaError('LIST_TOPICS_FAILED', `Failed to list topics: ${response.statusText}`)
     }
 
     const topics = await response.json() as string[]
@@ -240,6 +240,6 @@ export class KafdoAdmin implements Admin {
 /**
  * Create a new admin client
  */
-export function createAdmin(env: Env, config?: AdminConfig): KafdoAdmin {
-  return new KafdoAdmin(env, config)
+export function createAdmin(env: Env, config?: AdminConfig): KafkaAdmin {
+  return new KafkaAdmin(env, config)
 }

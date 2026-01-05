@@ -1,8 +1,8 @@
-# Kafdo
+# kafka.do
 
 Kafka-compatible streaming platform on Cloudflare Workers with Durable Object SQLite.
 
-Kafdo brings the familiar Kafka programming model to the edge, running entirely on Cloudflare's global network. Each topic partition is backed by a Durable Object with SQLite storage, providing strong consistency and durability without managing any infrastructure.
+kafka.do brings the familiar Kafka programming model to the edge, running entirely on Cloudflare's global network. Each topic partition is backed by a Durable Object with SQLite storage, providing strong consistency and durability without managing any infrastructure.
 
 ## Features
 
@@ -11,14 +11,14 @@ Kafdo brings the familiar Kafka programming model to the edge, running entirely 
 - **Durable storage** - Messages stored in Durable Object SQLite
 - **Consumer groups** - Coordinated consumption with automatic partition assignment
 - **Offset management** - Automatic and manual offset commits
-- **HTTP Client SDK** - Access Kafdo from any JavaScript runtime
+- **HTTP Client SDK** - Access kafka.do from any JavaScript runtime
 - **Partitioning** - Key-based partitioning for message ordering
 - **Batch operations** - Efficient batch produce and consume
 
 ## Installation
 
 ```bash
-npm install kafdo
+npm install kafka.do
 ```
 
 ## Quick Start
@@ -28,7 +28,7 @@ npm install kafdo
 Send messages to topics using the Producer API within a Cloudflare Worker:
 
 ```typescript
-import { createProducer } from 'kafdo'
+import { createProducer } from 'kafka.do'
 
 export default {
   async fetch(request: Request, env: Env) {
@@ -62,7 +62,7 @@ export default {
 Consume messages from topics using the Consumer API:
 
 ```typescript
-import { createConsumer } from 'kafdo'
+import { createConsumer } from 'kafka.do'
 
 export default {
   async fetch(request: Request, env: Env) {
@@ -111,7 +111,7 @@ for await (const record of consumer) {
 Manage topics and consumer groups:
 
 ```typescript
-import { createAdmin } from 'kafdo'
+import { createAdmin } from 'kafka.do'
 
 export default {
   async fetch(request: Request, env: Env) {
@@ -166,14 +166,14 @@ export default {
 
 ### HTTP Client SDK
 
-Access Kafdo from any JavaScript environment using the HTTP Client SDK:
+Access kafka.do from any JavaScript environment using the HTTP Client SDK:
 
 ```typescript
-import { KafdoClient } from 'kafdo/client'
+import { KafkaClient } from 'kafka.do/client'
 
-// Create client pointing to your Kafdo deployment
-const client = new KafdoClient({
-  baseUrl: 'https://kafdo.your-domain.workers.dev',
+// Create client pointing to your kafka.do deployment
+const client = new KafkaClient({
+  baseUrl: 'https://kafka.your-domain.workers.dev',
   clientId: 'my-app',
   timeout: 30000,
   headers: {
@@ -273,7 +273,7 @@ Creates a new consumer instance.
 | Config Option | Type | Default | Description |
 |--------------|------|---------|-------------|
 | `groupId` | `string` | *required* | Consumer group ID |
-| `clientId` | `string` | `'kafdo-consumer'` | Client identifier |
+| `clientId` | `string` | `'do-consumer'` | Client identifier |
 | `sessionTimeoutMs` | `number` | `30000` | Session timeout |
 | `heartbeatIntervalMs` | `number` | `3000` | Heartbeat interval |
 | `maxPollRecords` | `number` | `500` | Max records per poll |
@@ -333,11 +333,11 @@ Creates a new admin client.
 
 ### HTTP Client
 
-#### `KafdoClient`
+#### `KafkaClient`
 
 | Config Option | Type | Default | Description |
 |--------------|------|---------|-------------|
-| `baseUrl` | `string` | *required* | Kafdo service URL |
+| `baseUrl` | `string` | *required* | kafka.do service URL |
 | `clientId` | `string` | auto-generated | Client identifier |
 | `timeout` | `number` | `30000` | Request timeout (ms) |
 | `headers` | `object` | `{}` | Default headers |
@@ -345,26 +345,26 @@ Creates a new admin client.
 
 ## Integrations
 
-Kafdo includes pre-built integrations for common data sources.
+kafka.do includes pre-built integrations for common data sources.
 
 ```typescript
 import {
-  KafdoPipeline,
-  createKafdoPipeline,
+  KafkaPipeline,
+  createKafkaPipeline,
   R2EventBridge,
   createR2EventBridge
-} from 'kafdo/integrations'
+} from 'kafka.do/integrations'
 ```
 
 ### MongoDB CDC
 
-Stream MongoDB change events to Kafdo topics using the `KafdoPipeline` adapter. This integrates with MongoDB change streams to capture insert, update, and delete operations in real-time.
+Stream MongoDB change events to kafka.do topics using the `KafkaPipeline` adapter. This integrates with MongoDB change streams to capture insert, update, and delete operations in real-time.
 
 ```typescript
-import { createKafdoPipeline, type CDCEvent } from 'kafdo/integrations'
+import { createKafkaPipeline, type CDCEvent } from 'kafka.do/integrations'
 
 // Create a pipeline that routes events to topics based on database/collection
-const pipeline = createKafdoPipeline({
+const pipeline = createKafkaPipeline({
   env,
   topicPattern: 'cdc.{db}.{coll}' // e.g., cdc.mydb.users
 })
@@ -384,14 +384,14 @@ await pipeline.sendBatch(cdcEvents)
 ```
 
 **Factory functions:**
-- `createKafdoPipeline(config)` - Full configuration with custom topic patterns
+- `createKafkaPipeline(config)` - Full configuration with custom topic patterns
 - `createFixedTopicPipeline(env, topic)` - All events go to a single topic
 - `createDatabaseTopicPipeline(env)` - Topics per database (`cdc.{db}`)
 - `createCollectionTopicPipeline(env)` - Topics per collection (`cdc.{db}.{coll}`)
 
 **Consumer helpers:**
 ```typescript
-import { processCDCMessage, isInsertEvent } from 'kafdo/integrations'
+import { processCDCMessage, isInsertEvent } from 'kafka.do/integrations'
 
 // Process CDC messages with typed handlers
 await processCDCMessage(message, {
@@ -406,10 +406,10 @@ await processCDCMessage(message, {
 
 ### R2 Event Bridge
 
-Stream R2 object events (creates, deletes) to Kafdo topics. Use this as a Queue consumer to capture R2 event notifications.
+Stream R2 object events (creates, deletes) to kafka.do topics. Use this as a Queue consumer to capture R2 event notifications.
 
 ```typescript
-import { createR2EventBridge, R2EventBridge } from 'kafdo/integrations'
+import { createR2EventBridge, R2EventBridge } from 'kafka.do/integrations'
 
 // Create an event bridge
 const bridge = createR2EventBridge({
@@ -436,7 +436,7 @@ export default {
 
 **Consumer helpers:**
 ```typescript
-import { processR2Event, isR2ObjectCreated } from 'kafdo/integrations'
+import { processR2Event, isR2ObjectCreated } from 'kafka.do/integrations'
 
 // Process R2 events with typed handlers
 await processR2Event(message, {
@@ -457,7 +457,7 @@ await processR2Event(message, {
 Add the following to your `wrangler.toml`:
 
 ```toml
-name = "my-kafdo-app"
+name = "my-kafka-app"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
@@ -486,7 +486,7 @@ interface Env {
 
 ## HTTP API Endpoints
 
-Kafdo exposes a REST API for external access:
+kafka.do exposes a REST API for external access:
 
 ### Producer Endpoints
 

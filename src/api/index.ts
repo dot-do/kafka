@@ -1,15 +1,15 @@
 /**
- * Kafdo API - High-level client interfaces
+ * kafka.do API - High-level client interfaces
  */
 
 // Producer API
-export { KafdoProducer, createProducer } from './producer'
+export { KafkaProducer, createProducer } from './producer'
 
 // Consumer API
-export { KafdoConsumer, createConsumer } from './consumer'
+export { KafkaConsumer, createConsumer } from './consumer'
 
 // Admin API
-export { KafdoAdmin, createAdmin } from './admin'
+export { KafkaAdmin, createAdmin } from './admin'
 
 // Re-export types for convenience
 export type { ProducerRecord, ConsumerRecord, RecordMetadata, TopicPartition, OffsetAndMetadata } from '../types/records'

@@ -1,8 +1,8 @@
 /**
- * Kafdo Consumer Client
+ * kafka.do Consumer Client
  */
 
-import type { KafdoClientConfig } from './client'
+import type { KafkaClientConfig } from './client'
 import type { ConsumerRecord, TopicPartition } from '../types/records'
 import { ConsumeError, ConsumerGroupError } from '../errors'
 
@@ -32,10 +32,10 @@ interface JoinResult {
 }
 
 /**
- * KafdoConsumerClient - HTTP client for consuming messages
+ * KafkaConsumerClient - HTTP client for consuming messages
  */
-export class KafdoConsumerClient {
-  private config: KafdoClientConfig
+export class KafkaConsumerClient {
+  private config: KafkaClientConfig
   private options: ConsumerOptions
   private memberId: string | null = null
   private generationId: number = 0
@@ -43,7 +43,7 @@ export class KafdoConsumerClient {
   private uncommittedOffsets: Map<string, number> = new Map()
   private closed = false
 
-  constructor(config: KafdoClientConfig, options: ConsumerOptions) {
+  constructor(config: KafkaClientConfig, options: ConsumerOptions) {
     this.config = config
     this.options = {
       sessionTimeoutMs: 30000,

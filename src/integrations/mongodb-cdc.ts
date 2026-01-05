@@ -1,8 +1,8 @@
 /**
  * MongoDB CDC Integration
  *
- * Provides a Pipeline adapter that sends MongoDB CDC events to Kafdo topics.
- * This allows real-time streaming of document changes from MongoDB to Kafdo.
+ * Provides a Pipeline adapter that sends MongoDB CDC events to kafka.do topics.
+ * This allows real-time streaming of document changes from MongoDB to kafka.do.
  */
 
 import type { Env } from '../index'
@@ -90,14 +90,14 @@ export interface Pipeline {
 }
 
 // ============================================================================
-// Kafdo Pipeline Adapter
+// kafka.do Pipeline Adapter
 // ============================================================================
 
 /**
- * Configuration for the Kafdo Pipeline adapter
+ * Configuration for the kafka.do Pipeline adapter
  */
-export interface KafdoPipelineConfig {
-  /** Kafdo environment bindings */
+export interface KafkaPipelineConfig {
+  /** kafka.do environment bindings */
   env: Env
   /** Topic name pattern for CDC events (default: 'cdc.{db}.{coll}') */
   topicPattern?: string
@@ -122,17 +122,17 @@ function extractDocumentId(documentKey: DocumentKey): string {
 }
 
 /**
- * KafdoPipeline - Implements Pipeline interface for MongoDB CDC integration
+ * KafkaPipeline - Implements Pipeline interface for MongoDB CDC integration
  *
- * This adapter receives CDC events from MongoDB and publishes them to Kafdo topics.
+ * This adapter receives CDC events from MongoDB and publishes them to kafka.do topics.
  */
-export class KafdoPipeline implements Pipeline {
+export class KafkaPipeline implements Pipeline {
   private env: Env
   private topicPattern: string
   private topicResolver: (event: CDCEvent) => string
   private includeFullDocumentInKey: boolean
 
-  constructor(config: KafdoPipelineConfig) {
+  constructor(config: KafkaPipelineConfig) {
     this.env = config.env
     this.topicPattern = config.topicPattern ?? 'cdc.{db}.{coll}'
     this.includeFullDocumentInKey = config.includeFullDocumentInKey ?? false
@@ -166,7 +166,7 @@ export class KafdoPipeline implements Pipeline {
   }
 
   /**
-   * Send a single CDC event to Kafdo
+   * Send a single CDC event to kafka.do
    */
   async send(data: unknown): Promise<void> {
     const event = data as CDCEvent
@@ -192,7 +192,7 @@ export class KafdoPipeline implements Pipeline {
   }
 
   /**
-   * Send a batch of CDC events to Kafdo
+   * Send a batch of CDC events to kafka.do
    */
   async sendBatch(data: unknown[]): Promise<void> {
     const events = data as CDCEvent[]
@@ -224,17 +224,17 @@ export class KafdoPipeline implements Pipeline {
 // ============================================================================
 
 /**
- * Create a new Kafdo Pipeline for MongoDB CDC
+ * Create a new kafka.do Pipeline for MongoDB CDC
  */
-export function createKafdoPipeline(config: KafdoPipelineConfig): KafdoPipeline {
-  return new KafdoPipeline(config)
+export function createKafkaPipeline(config: KafkaPipelineConfig): KafkaPipeline {
+  return new KafkaPipeline(config)
 }
 
 /**
  * Create a Pipeline with a fixed topic
  */
-export function createFixedTopicPipeline(env: Env, topic: string): KafdoPipeline {
-  return new KafdoPipeline({
+export function createFixedTopicPipeline(env: Env, topic: string): KafkaPipeline {
+  return new KafkaPipeline({
     env,
     topicResolver: () => topic,
   })
@@ -243,8 +243,8 @@ export function createFixedTopicPipeline(env: Env, topic: string): KafdoPipeline
 /**
  * Create a Pipeline with database-level topics
  */
-export function createDatabaseTopicPipeline(env: Env): KafdoPipeline {
-  return new KafdoPipeline({
+export function createDatabaseTopicPipeline(env: Env): KafkaPipeline {
+  return new KafkaPipeline({
     env,
     topicPattern: 'cdc.{db}',
   })
@@ -253,8 +253,8 @@ export function createDatabaseTopicPipeline(env: Env): KafdoPipeline {
 /**
  * Create a Pipeline with collection-level topics
  */
-export function createCollectionTopicPipeline(env: Env): KafdoPipeline {
-  return new KafdoPipeline({
+export function createCollectionTopicPipeline(env: Env): KafkaPipeline {
+  return new KafkaPipeline({
     env,
     topicPattern: 'cdc.{db}.{coll}',
   })
@@ -285,7 +285,7 @@ export interface CDCConsumerConfig {
 }
 
 /**
- * Process CDC events from Kafdo messages
+ * Process CDC events from kafka.do messages
  */
 export async function processCDCMessage(
   message: { value: unknown; headers?: Record<string, string> },

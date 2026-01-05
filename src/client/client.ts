@@ -1,13 +1,13 @@
 /**
- * Main Kafdo Client
+ * Main kafka.do Client
  */
 
-import { KafdoProducerClient, type ProducerOptions } from './producer'
-import { KafdoConsumerClient, type ConsumerOptions } from './consumer'
-import { KafdoAdminClient } from './admin'
+import { KafkaProducerClient, type ProducerOptions } from './producer'
+import { KafkaConsumerClient, type ConsumerOptions } from './consumer'
+import { KafkaAdminClient } from './admin'
 
-export interface KafdoClientConfig {
-  /** Base URL of the Kafdo service */
+export interface KafkaClientConfig {
+  /** Base URL of the kafka.do service */
   baseUrl: string
   /** Client identifier */
   clientId?: string
@@ -20,15 +20,15 @@ export interface KafdoClientConfig {
 }
 
 /**
- * KafdoClient - Main entry point for the Kafdo SDK
+ * KafkaClient - Main entry point for the kafka.do SDK
  */
-export class KafdoClient {
-  private config: Required<Omit<KafdoClientConfig, 'headers'>> & { headers: Record<string, string> }
+export class KafkaClient {
+  private config: Required<Omit<KafkaClientConfig, 'headers'>> & { headers: Record<string, string> }
 
-  constructor(config: KafdoClientConfig) {
+  constructor(config: KafkaClientConfig) {
     this.config = {
       baseUrl: config.baseUrl.replace(/\/$/, ''), // Remove trailing slash
-      clientId: config.clientId ?? `kafdo-client-${Date.now()}`,
+      clientId: config.clientId ?? `do-client-${Date.now()}`,
       fetch: config.fetch ?? globalThis.fetch.bind(globalThis),
       headers: config.headers ?? {},
       timeout: config.timeout ?? 30000,
@@ -38,22 +38,22 @@ export class KafdoClient {
   /**
    * Create a producer client
    */
-  producer(options?: ProducerOptions): KafdoProducerClient {
-    return new KafdoProducerClient(this.config, options)
+  producer(options?: ProducerOptions): KafkaProducerClient {
+    return new KafkaProducerClient(this.config, options)
   }
 
   /**
    * Create a consumer client
    */
-  consumer(options: ConsumerOptions): KafdoConsumerClient {
-    return new KafdoConsumerClient(this.config, options)
+  consumer(options: ConsumerOptions): KafkaConsumerClient {
+    return new KafkaConsumerClient(this.config, options)
   }
 
   /**
    * Create an admin client
    */
-  admin(): KafdoAdminClient {
-    return new KafdoAdminClient(this.config)
+  admin(): KafkaAdminClient {
+    return new KafkaAdminClient(this.config)
   }
 
   /**
@@ -93,8 +93,8 @@ export class KafdoClient {
 }
 
 /**
- * Create a new Kafdo client
+ * Create a new kafka.do client
  */
-export function createClient(config: KafdoClientConfig): KafdoClient {
-  return new KafdoClient(config)
+export function createClient(config: KafkaClientConfig): KafkaClient {
+  return new KafkaClient(config)
 }

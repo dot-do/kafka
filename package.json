@@ -1,7 +1,7 @@
 {
-  "name": "kafdo",
+  "name": "kafka.do",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Kafka-compatible streaming platform on Cloudflare Workers with Durable Object SQLite",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,11 +29,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dot-do/kafdo.git"
+    "url": "https://github.com/dot-do/kafka.git"
   },
-  "homepage": "https://github.com/dot-do/kafdo#readme",
+  "homepage": "https://github.com/dot-do/kafka#readme",
   "bugs": {
-    "url": "https://github.com/dot-do/kafdo/issues"
+    "url": "https://github.com/dot-do/kafka/issues"
   },
   "keywords": [
     "kafka",

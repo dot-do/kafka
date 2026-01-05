@@ -1,8 +1,8 @@
 /**
- * Kafdo Producer Client
+ * kafka.do Producer Client
  */
 
-import type { KafdoClientConfig } from './client'
+import type { KafkaClientConfig } from './client'
 import type { RecordMetadata } from '../types/records'
 import { ProduceError } from '../errors'
 
@@ -25,13 +25,13 @@ export interface ProduceRecord {
 }
 
 /**
- * KafdoProducerClient - HTTP client for producing messages
+ * KafkaProducerClient - HTTP client for producing messages
  */
-export class KafdoProducerClient {
-  private config: KafdoClientConfig
+export class KafkaProducerClient {
+  private config: KafkaClientConfig
   private options: ProducerOptions
 
-  constructor(config: KafdoClientConfig, options?: ProducerOptions) {
+  constructor(config: KafkaClientConfig, options?: ProducerOptions) {
     this.config = config
     this.options = options ?? {}
   }

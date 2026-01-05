@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { SELF, env } from 'cloudflare:test'
 
-describe('Kafdo Worker', () => {
+describe('kafka.do Worker', () => {
   it('responds with status info on root', async () => {
     const response = await SELF.fetch('http://localhost/')
     expect(response.status).toBe(200)
 
     const data = await response.json() as { name: string; status: string }
-    expect(data.name).toBe('kafdo')
+    expect(data.name).toBe('kafka.do')
     expect(data.status).toBe('ok')
   })
 

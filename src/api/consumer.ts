@@ -1,5 +1,5 @@
 /**
- * Consumer API - High-level interface for consuming messages from Kafdo
+ * Consumer API - High-level interface for consuming messages from kafka.do
  */
 
 import type { Env } from '../index'
@@ -8,9 +8,9 @@ import type { ConsumerConfig, Consumer, RebalanceListener } from '../types/consu
 import { ConsumeError, ConsumerGroupError } from '../errors'
 
 /**
- * KafdoConsumer - Consumes messages from Kafdo topics
+ * KafkaConsumer - Consumes messages from kafka.do topics
  */
-export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
+export class KafkaConsumer<K = string, V = unknown> implements Consumer<K, V> {
   private env: Env
   private config: Required<ConsumerConfig>
   private memberId: string | null = null
@@ -30,7 +30,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
     this.rebalanceListener = rebalanceListener
     this.config = {
       groupId: config.groupId,
-      clientId: config.clientId ?? 'kafdo-consumer',
+      clientId: config.clientId ?? 'do-consumer',
       sessionTimeoutMs: config.sessionTimeoutMs ?? 30000,
       heartbeatIntervalMs: config.heartbeatIntervalMs ?? 3000,
       maxPollRecords: config.maxPollRecords ?? 500,
@@ -508,6 +508,6 @@ export function createConsumer<K = string, V = unknown>(
   env: Env,
   config: ConsumerConfig,
   rebalanceListener?: RebalanceListener
-): KafdoConsumer<K, V> {
-  return new KafdoConsumer(env, config, rebalanceListener)
+): KafkaConsumer<K, V> {
+  return new KafkaConsumer(env, config, rebalanceListener)
 }

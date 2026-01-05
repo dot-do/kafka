@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-01-05
+
+### Changed
+
+- Renamed package from `kafdo` to `kafka.do`
+- Renamed all class prefixes from `Kafdo*` to `Kafka*` (e.g., `KafkaClient`, `KafkaProducer`, `KafkaConsumer`, `KafkaAdmin`, `KafkaError`, `KafkaPipeline`)
+- Updated default client IDs from `kafdo-*` to `do-*` (e.g., `do-consumer`, `do-client-*`)
+- Updated repository from `dot-do/kafdo` to `dot-do/kafka`
+
 ## [0.0.3] - 2026-01-04
 
 ### Changed
@@ -31,11 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of Kafdo - Kafka on Cloudflare Durable Objects
+- Initial release of kafka.do - Kafka on Cloudflare Durable Objects
 - Producer API for publishing messages to topics with partition support
 - Consumer API with consumer groups, offset management, and rebalancing
 - Admin API for topic and partition management
-- HTTP Client SDK for interacting with Kafdo clusters
+- HTTP Client SDK for interacting with kafka.do clusters
 - Durable Objects for distributed storage:
   - TopicPartition for message storage and retrieval
   - ConsumerGroup for consumer coordination and offset tracking

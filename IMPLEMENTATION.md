@@ -1,10 +1,10 @@
-# Kafdo Implementation Plan
+# kafka.do Implementation Plan
 
 > Kafka-compatible streaming platform on Cloudflare Workers + Durable Object SQLite
 
 ## Vision
 
-Kafdo brings Kafka semantics to the edge with:
+kafka.do brings Kafka semantics to the edge with:
 - **Topics** → Named Durable Object namespaces
 - **Partitions** → Individual DOs with SQLite storage
 - **Consumer Groups** → Coordinator DOs for stateful consumption
@@ -15,7 +15,7 @@ Kafdo brings Kafka semantics to the edge with:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         KAFDO ARCHITECTURE                           │
+│                        KAFKA.DO ARCHITECTURE                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐          │
@@ -80,7 +80,7 @@ Kafdo brings Kafka semantics to the edge with:
 16. **Exactly-Once Semantics** - Idempotent producers, transactional consumers
 
 ### Phase 6: Client SDK
-17. **Kafdo Client** - JavaScript/TypeScript client library
+17. **kafka.do Client** - JavaScript/TypeScript client library
 18. **Connection Management** - Pooling, reconnection
 19. **Batch Operations** - Client-side batching
 
@@ -134,7 +134,7 @@ src/
 │   ├── r2-bridge.ts            # R2 event bridge
 │   └── webhook.ts              # Webhook consumer
 ├── client/
-│   ├── kafdo.ts                # Client SDK
+│   ├── client.ts               # Client SDK
 │   ├── producer.ts             # Producer client
 │   └── consumer.ts             # Consumer client
 └── utils/

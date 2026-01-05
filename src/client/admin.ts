@@ -1,22 +1,22 @@
 /**
- * Kafdo Admin Client
+ * kafka.do Admin Client
  */
 
-import type { KafdoClientConfig } from './client'
+import type { KafkaClientConfig } from './client'
 import type {
   TopicConfig,
   TopicMetadata,
   GroupDescription,
 } from '../types/admin'
-import { TopicNotFoundError, ConsumerGroupError, KafdoError } from '../errors'
+import { TopicNotFoundError, ConsumerGroupError, KafkaError } from '../errors'
 
 /**
- * KafdoAdminClient - HTTP client for admin operations
+ * KafkaAdminClient - HTTP client for admin operations
  */
-export class KafdoAdminClient {
-  private config: KafdoClientConfig
+export class KafkaAdminClient {
+  private config: KafkaClientConfig
 
-  constructor(config: KafdoClientConfig) {
+  constructor(config: KafkaClientConfig) {
     this.config = config
   }
 
@@ -47,7 +47,7 @@ export class KafdoAdminClient {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new KafdoError('TOPIC_CREATE_FAILED', `Failed to create topic: ${error}`)
+      throw new KafkaError('TOPIC_CREATE_FAILED', `Failed to create topic: ${error}`)
     }
 
     return response.json()
@@ -62,7 +62,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new KafdoError('LIST_TOPICS_FAILED', `Failed to list topics: ${response.statusText}`)
+      throw new KafkaError('LIST_TOPICS_FAILED', `Failed to list topics: ${response.statusText}`)
     }
 
     const result = (await response.json()) as { topics: string[] }

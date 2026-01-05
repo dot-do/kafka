@@ -1,5 +1,5 @@
 /**
- * Producer API - High-level interface for sending messages to Kafdo
+ * Producer API - High-level interface for sending messages to kafka.do
  */
 
 import type { Env } from '../index'
@@ -25,9 +25,9 @@ function defaultPartitioner(key: string | undefined, partitionCount: number): nu
 }
 
 /**
- * KafdoProducer - Sends messages to Kafdo topics
+ * KafkaProducer - Sends messages to kafka.do topics
  */
-export class KafdoProducer {
+export class KafkaProducer {
   private env: Env
   private topicMetadataCache: Map<string, { partitions: number; timestamp: number }> = new Map()
   private readonly CACHE_TTL = 60000 // 1 minute
@@ -183,6 +183,6 @@ export class KafdoProducer {
 /**
  * Create a new producer
  */
-export function createProducer(env: Env, config?: ProducerConfig): KafdoProducer {
-  return new KafdoProducer(env, config)
+export function createProducer(env: Env, config?: ProducerConfig): KafkaProducer {
+  return new KafkaProducer(env, config)
 }
