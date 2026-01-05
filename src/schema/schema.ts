@@ -76,12 +76,13 @@ CREATE INDEX IF NOT EXISTS idx_members_heartbeat ON members(last_heartbeat);
  */
 export const OFFSETS_SCHEMA = `
 CREATE TABLE IF NOT EXISTS offsets (
+  group_id TEXT NOT NULL,
   topic TEXT NOT NULL,
   partition INTEGER NOT NULL,
   committed_offset INTEGER NOT NULL,
   metadata TEXT DEFAULT '',
   commit_timestamp INTEGER DEFAULT (unixepoch() * 1000),
-  PRIMARY KEY (topic, partition)
+  PRIMARY KEY (group_id, topic, partition)
 );
 `
 

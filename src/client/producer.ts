@@ -4,6 +4,7 @@
 
 import type { KafdoClientConfig } from './client'
 import type { RecordMetadata } from '../types/records'
+import { ProduceError } from '../errors'
 
 export interface ProducerOptions {
   /** Default topic to produce to */
@@ -49,7 +50,7 @@ export class KafdoProducerClient {
   async send(record: ProduceRecord): Promise<RecordMetadata> {
     const topic = record.topic ?? this.options.defaultTopic
     if (!topic) {
-      throw new Error('Topic is required (either in record or as defaultTopic)')
+      throw new ProduceError('Topic is required (either in record or as defaultTopic)')
     }
 
     const response = await this.fetchFn(`${this.baseUrl}/topics/${topic}/produce`, {
@@ -68,7 +69,7 @@ export class KafdoProducerClient {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Failed to produce message: ${error}`)
+      throw new ProduceError(`Failed to produce message: ${error}`)
     }
 
     return response.json()
@@ -83,7 +84,7 @@ export class KafdoProducerClient {
   ): Promise<{ results: RecordMetadata[] }> {
     const topic = options?.topic ?? this.options.defaultTopic
     if (!topic) {
-      throw new Error('Topic is required (either in options or as defaultTopic)')
+      throw new ProduceError('Topic is required (either in options or as defaultTopic)')
     }
 
     const response = await this.fetchFn(`${this.baseUrl}/topics/${topic}/produce-batch`, {
@@ -104,7 +105,7 @@ export class KafdoProducerClient {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Failed to produce batch: ${error}`)
+      throw new ProduceError(`Failed to produce batch: ${error}`)
     }
 
     return response.json()

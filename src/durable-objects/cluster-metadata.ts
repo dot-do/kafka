@@ -11,6 +11,7 @@ import { DurableObject } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import { initializeSchema } from '../schema/schema'
 import type { TopicConfig, TopicMetadata, PartitionMetadata } from '../types/admin'
+import { safeJsonParse } from '../utils'
 
 export class ClusterMetadataDO extends DurableObject<Record<string, unknown>> {
   private sql: SqlStorage
@@ -60,16 +61,16 @@ export class ClusterMetadataDO extends DurableObject<Record<string, unknown>> {
 
     this.app.get('/partitions/:topic/:partition', async (c) => {
       const topic = c.req.param('topic')
-      const partition = parseInt(c.req.param('partition'))
+      const partition = parseInt(c.req.param('partition'), 10)
       const info = await this.getPartition(topic, partition)
       return c.json(info)
     })
   }
 
   private async ensureInitialized() {
-    if (this.initialized) return
-
     await this.ctx.blockConcurrencyWhile(async () => {
+      if (this.initialized) return
+
       const tables = this.sql.exec<{ name: string }>(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='topics'`
       ).toArray()
@@ -90,29 +91,48 @@ export class ClusterMetadataDO extends DurableObject<Record<string, unknown>> {
   async createTopic(config: TopicConfig): Promise<void> {
     await this.ensureInitialized()
 
-    const now = Date.now()
-    const configJson = JSON.stringify(config.config ?? {})
+    return this.ctx.blockConcurrencyWhile(async () => {
+      const now = Date.now()
+      const configJson = JSON.stringify(config.config ?? {})
 
-    this.sql.exec(`
-      INSERT INTO topics (name, partition_count, replication_factor, config, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `, config.topic, config.partitions, config.replicationFactor ?? 1, configJson, now)
+      this.sql.exec('BEGIN TRANSACTION')
+      try {
+        this.sql.exec(`
+          INSERT INTO topics (name, partition_count, replication_factor, config, created_at)
+          VALUES (?, ?, ?, ?, ?)
+        `, config.topic, config.partitions, config.replicationFactor ?? 1, configJson, now)
 
-    // Create partition entries
-    for (let i = 0; i < config.partitions; i++) {
-      const doId = `${config.topic}-${i}`
-      this.sql.exec(`
-        INSERT INTO partitions (topic, partition, leader_do_id, replicas, isr)
-        VALUES (?, ?, ?, '[]', '[]')
-      `, config.topic, i, doId)
-    }
+        // Create partition entries
+        for (let i = 0; i < config.partitions; i++) {
+          const doId = `${config.topic}-${i}`
+          this.sql.exec(`
+            INSERT INTO partitions (topic, partition, leader_do_id, replicas, isr)
+            VALUES (?, ?, ?, '[]', '[]')
+          `, config.topic, i, doId)
+        }
+
+        this.sql.exec('COMMIT')
+      } catch (e) {
+        this.sql.exec('ROLLBACK')
+        throw e
+      }
+    })
   }
 
   async deleteTopic(name: string): Promise<void> {
     await this.ensureInitialized()
 
-    this.sql.exec(`DELETE FROM partitions WHERE topic = ?`, name)
-    this.sql.exec(`DELETE FROM topics WHERE name = ?`, name)
+    return this.ctx.blockConcurrencyWhile(async () => {
+      this.sql.exec('BEGIN TRANSACTION')
+      try {
+        this.sql.exec(`DELETE FROM partitions WHERE topic = ?`, name)
+        this.sql.exec(`DELETE FROM topics WHERE name = ?`, name)
+        this.sql.exec('COMMIT')
+      } catch (e) {
+        this.sql.exec('ROLLBACK')
+        throw e
+      }
+    })
   }
 
   async listTopics(): Promise<string[]> {
@@ -146,38 +166,48 @@ export class ClusterMetadataDO extends DurableObject<Record<string, unknown>> {
       partitions: partitionRows.map(p => ({
         partition: p.partition,
         leader: p.leader_do_id,
-        replicas: JSON.parse(p.replicas),
-        isr: JSON.parse(p.isr),
+        replicas: safeJsonParse<string[]>(p.replicas, []),
+        isr: safeJsonParse<string[]>(p.isr, []),
       })),
-      config: JSON.parse(topicRow[0].config),
+      config: safeJsonParse<Record<string, string>>(topicRow[0].config, {}),
     }
   }
 
   async addPartitions(topic: string, newTotal: number): Promise<void> {
     await this.ensureInitialized()
 
-    const topicRow = this.sql.exec<{ partition_count: number }>(
-      `SELECT partition_count FROM topics WHERE name = ?`,
-      topic
-    ).one()
+    return this.ctx.blockConcurrencyWhile(async () => {
+      const topicRow = this.sql.exec<{ partition_count: number }>(
+        `SELECT partition_count FROM topics WHERE name = ?`,
+        topic
+      ).one()
 
-    const currentCount = topicRow.partition_count
+      const currentCount = topicRow.partition_count
 
-    if (newTotal <= currentCount) {
-      throw new Error(`New partition count (${newTotal}) must be greater than current (${currentCount})`)
-    }
+      if (newTotal <= currentCount) {
+        throw new Error(`New partition count (${newTotal}) must be greater than current (${currentCount})`)
+      }
 
-    // Add new partitions
-    for (let i = currentCount; i < newTotal; i++) {
-      const doId = `${topic}-${i}`
-      this.sql.exec(`
-        INSERT INTO partitions (topic, partition, leader_do_id, replicas, isr)
-        VALUES (?, ?, ?, '[]', '[]')
-      `, topic, i, doId)
-    }
+      this.sql.exec('BEGIN TRANSACTION')
+      try {
+        // Add new partitions
+        for (let i = currentCount; i < newTotal; i++) {
+          const doId = `${topic}-${i}`
+          this.sql.exec(`
+            INSERT INTO partitions (topic, partition, leader_do_id, replicas, isr)
+            VALUES (?, ?, ?, '[]', '[]')
+          `, topic, i, doId)
+        }
 
-    // Update topic partition count
-    this.sql.exec(`UPDATE topics SET partition_count = ? WHERE name = ?`, newTotal, topic)
+        // Update topic partition count
+        this.sql.exec(`UPDATE topics SET partition_count = ? WHERE name = ?`, newTotal, topic)
+
+        this.sql.exec('COMMIT')
+      } catch (e) {
+        this.sql.exec('ROLLBACK')
+        throw e
+      }
+    })
   }
 
   async getPartition(topic: string, partition: number): Promise<PartitionMetadata | null> {
@@ -202,8 +232,8 @@ export class ClusterMetadataDO extends DurableObject<Record<string, unknown>> {
     return {
       partition: row.partition,
       leader: row.leader_do_id,
-      replicas: JSON.parse(row.replicas),
-      isr: JSON.parse(row.isr),
+      replicas: safeJsonParse<string[]>(row.replicas, []),
+      isr: safeJsonParse<string[]>(row.isr, []),
     }
   }
 

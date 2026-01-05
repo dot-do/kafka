@@ -13,6 +13,7 @@ import { Hono } from 'hono'
 import { initializeSchema } from '../schema/schema'
 import type { ConsumerGroupState } from '../types/consumer'
 import type { TopicPartition } from '../types/records'
+import { safeJsonParse } from '../utils'
 
 export interface GroupMember {
   memberId: string
@@ -74,9 +75,9 @@ export class ConsumerGroupDO extends DurableObject<Record<string, unknown>> {
   }
 
   private async ensureInitialized() {
-    if (this.initialized) return
-
     await this.ctx.blockConcurrencyWhile(async () => {
+      if (this.initialized) return
+
       const tables = this.sql.exec<{ name: string }>(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='group_metadata'`
       ).toArray()
@@ -108,93 +109,117 @@ export class ConsumerGroupDO extends DurableObject<Record<string, unknown>> {
   }): Promise<{ memberId: string; generationId: number; leaderId: string; members: GroupMember[] }> {
     await this.ensureInitialized()
 
-    const groupId = this.getGroupId()
-    const memberId = params.memberId || `${params.clientId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const now = Date.now()
+    return this.ctx.blockConcurrencyWhile(async () => {
+      const groupId = this.getGroupId()
+      const memberId = params.memberId || `${params.clientId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const now = Date.now()
 
-    this.sql.exec(`
-      INSERT INTO group_metadata (group_id, state, generation_id, leader_id, protocol, updated_at)
-      VALUES (?, 'PreparingRebalance', 1, ?, 'range', ?)
-      ON CONFLICT(group_id) DO UPDATE SET
-        state = 'PreparingRebalance',
-        generation_id = generation_id + 1,
-        updated_at = ?
-    `, groupId, memberId, now, now)
+      this.sql.exec('BEGIN TRANSACTION')
+      try {
+        this.sql.exec(`
+          INSERT INTO group_metadata (group_id, state, generation_id, leader_id, protocol, updated_at)
+          VALUES (?, 'PreparingRebalance', 1, ?, 'range', ?)
+          ON CONFLICT(group_id) DO UPDATE SET
+            state = 'PreparingRebalance',
+            generation_id = generation_id + 1,
+            updated_at = ?
+        `, groupId, memberId, now, now)
 
-    this.sql.exec(`
-      INSERT INTO members (member_id, client_id, client_host, session_timeout, rebalance_timeout, last_heartbeat, assigned_partitions)
-      VALUES (?, ?, ?, ?, ?, ?, '[]')
-      ON CONFLICT(member_id) DO UPDATE SET
-        client_id = ?,
-        client_host = ?,
-        session_timeout = ?,
-        rebalance_timeout = ?,
-        last_heartbeat = ?
-    `, memberId, params.clientId, params.clientHost, params.sessionTimeout, params.rebalanceTimeout, now,
-       params.clientId, params.clientHost, params.sessionTimeout, params.rebalanceTimeout, now)
+        this.sql.exec(`
+          INSERT INTO members (member_id, client_id, client_host, session_timeout, rebalance_timeout, last_heartbeat, assigned_partitions)
+          VALUES (?, ?, ?, ?, ?, ?, '[]')
+          ON CONFLICT(member_id) DO UPDATE SET
+            client_id = ?,
+            client_host = ?,
+            session_timeout = ?,
+            rebalance_timeout = ?,
+            last_heartbeat = ?
+        `, memberId, params.clientId, params.clientHost, params.sessionTimeout, params.rebalanceTimeout, now,
+           params.clientId, params.clientHost, params.sessionTimeout, params.rebalanceTimeout, now)
 
-    const metadata = this.sql.exec<{ generation_id: number; leader_id: string }>(
-      `SELECT generation_id, leader_id FROM group_metadata WHERE group_id = ?`,
-      groupId
-    ).one()
+        this.sql.exec('COMMIT')
+      } catch (e) {
+        this.sql.exec('ROLLBACK')
+        throw e
+      }
 
-    const members = this.sql.exec<{
-      member_id: string
-      client_id: string
-      client_host: string
-      session_timeout: number
-      rebalance_timeout: number
-      assigned_partitions: string
-      last_heartbeat: number
-    }>(`SELECT * FROM members`).toArray()
+      const metadata = this.sql.exec<{ generation_id: number; leader_id: string }>(
+        `SELECT generation_id, leader_id FROM group_metadata WHERE group_id = ?`,
+        groupId
+      ).one()
 
-    return {
-      memberId,
-      generationId: metadata.generation_id,
-      leaderId: metadata.leader_id,
-      members: members.map(m => ({
-        memberId: m.member_id,
-        clientId: m.client_id,
-        clientHost: m.client_host,
-        sessionTimeout: m.session_timeout,
-        rebalanceTimeout: m.rebalance_timeout,
-        assignedPartitions: JSON.parse(m.assigned_partitions),
-        lastHeartbeat: m.last_heartbeat,
-      })),
-    }
+      const members = this.sql.exec<{
+        member_id: string
+        client_id: string
+        client_host: string
+        session_timeout: number
+        rebalance_timeout: number
+        assigned_partitions: string
+        last_heartbeat: number
+      }>(`SELECT * FROM members`).toArray()
+
+      return {
+        memberId,
+        generationId: metadata.generation_id,
+        leaderId: metadata.leader_id,
+        members: members.map(m => ({
+          memberId: m.member_id,
+          clientId: m.client_id,
+          clientHost: m.client_host,
+          sessionTimeout: m.session_timeout,
+          rebalanceTimeout: m.rebalance_timeout,
+          assignedPartitions: safeJsonParse<TopicPartition[]>(m.assigned_partitions, []),
+          lastHeartbeat: m.last_heartbeat,
+        })),
+      }
+    })
   }
 
   async leave(memberId: string): Promise<void> {
     await this.ensureInitialized()
-    this.sql.exec(`DELETE FROM members WHERE member_id = ?`, memberId)
 
-    const remaining = this.sql.exec<{ count: number }>(
-      `SELECT COUNT(*) as count FROM members`
-    ).one()
+    return this.ctx.blockConcurrencyWhile(async () => {
+      const groupId = this.getGroupId()
 
-    const groupId = this.getGroupId()
-    if (remaining.count === 0) {
-      this.sql.exec(`UPDATE group_metadata SET state = 'Empty' WHERE group_id = ?`, groupId)
-    } else {
-      this.sql.exec(`UPDATE group_metadata SET state = 'PreparingRebalance', generation_id = generation_id + 1 WHERE group_id = ?`, groupId)
-    }
+      this.sql.exec('BEGIN TRANSACTION')
+      try {
+        this.sql.exec(`DELETE FROM members WHERE member_id = ?`, memberId)
+
+        const remaining = this.sql.exec<{ count: number }>(
+          `SELECT COUNT(*) as count FROM members`
+        ).one()
+
+        if (remaining.count === 0) {
+          this.sql.exec(`UPDATE group_metadata SET state = 'Empty' WHERE group_id = ?`, groupId)
+        } else {
+          this.sql.exec(`UPDATE group_metadata SET state = 'PreparingRebalance', generation_id = generation_id + 1 WHERE group_id = ?`, groupId)
+        }
+
+        this.sql.exec('COMMIT')
+      } catch (e) {
+        this.sql.exec('ROLLBACK')
+        throw e
+      }
+    })
   }
 
   async heartbeat(memberId: string, generationId: number): Promise<{ needsRebalance: boolean }> {
     await this.ensureInitialized()
 
-    const now = Date.now()
-    this.sql.exec(`UPDATE members SET last_heartbeat = ? WHERE member_id = ?`, now, memberId)
+    return await this.ctx.blockConcurrencyWhile(async () => {
+      const now = Date.now()
+      this.sql.exec(`UPDATE members SET last_heartbeat = ? WHERE member_id = ?`, now, memberId)
 
-    const groupId = this.getGroupId()
-    const metadata = this.sql.exec<{ generation_id: number; state: string }>(
-      `SELECT generation_id, state FROM group_metadata WHERE group_id = ?`,
-      groupId
-    ).one()
+      const groupId = this.getGroupId()
+      const metadata = this.sql.exec<{ generation_id: number; state: string }>(
+        `SELECT generation_id, state FROM group_metadata WHERE group_id = ?`,
+        groupId
+      ).one()
 
-    return {
-      needsRebalance: metadata.generation_id !== generationId || metadata.state === 'PreparingRebalance',
-    }
+      return {
+        needsRebalance: metadata.generation_id !== generationId || metadata.state === 'PreparingRebalance',
+      }
+    })
   }
 
   async commitOffsets(
@@ -203,32 +228,38 @@ export class ConsumerGroupDO extends DurableObject<Record<string, unknown>> {
   ): Promise<void> {
     await this.ensureInitialized()
 
-    const now = Date.now()
-    for (const offset of offsets) {
-      this.sql.exec(`
-        INSERT INTO offsets (topic, partition, committed_offset, metadata, commit_timestamp)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(topic, partition) DO UPDATE SET
-          committed_offset = ?,
-          metadata = ?,
-          commit_timestamp = ?
-      `, offset.topic, offset.partition, offset.offset, offset.metadata ?? '', now,
-         offset.offset, offset.metadata ?? '', now)
-    }
+    return this.ctx.blockConcurrencyWhile(async () => {
+      const groupId = this.getGroupId()
+      const now = Date.now()
+      for (const offset of offsets) {
+        this.sql.exec(`
+          INSERT INTO offsets (group_id, topic, partition, committed_offset, metadata, commit_timestamp)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(group_id, topic, partition) DO UPDATE SET
+            committed_offset = ?,
+            metadata = ?,
+            commit_timestamp = ?
+        `, groupId, offset.topic, offset.partition, offset.offset, offset.metadata ?? '', now,
+           offset.offset, offset.metadata ?? '', now)
+      }
+    })
   }
 
   async fetchOffsets(partitions: TopicPartition[]): Promise<Map<string, number>> {
     await this.ensureInitialized()
 
+    const groupId = this.getGroupId()
     const result = new Map<string, number>()
     for (const tp of partitions) {
       const row = this.sql.exec<{ committed_offset: number }>(
-        `SELECT committed_offset FROM offsets WHERE topic = ? AND partition = ?`,
+        `SELECT committed_offset FROM offsets WHERE group_id = ? AND topic = ? AND partition = ?`,
+        groupId,
         tp.topic,
         tp.partition
       ).toArray()
 
-      const key = `${tp.topic}-${tp.partition}`
+      // Use :: delimiter to support hyphenated topic names
+      const key = `${tp.topic}::${tp.partition}`
       result.set(key, row.length > 0 ? row[0].committed_offset : -1)
     }
 
@@ -269,7 +300,7 @@ export class ConsumerGroupDO extends DurableObject<Record<string, unknown>> {
         clientHost: m.client_host,
         sessionTimeout: m.session_timeout,
         rebalanceTimeout: m.rebalance_timeout,
-        assignedPartitions: JSON.parse(m.assigned_partitions),
+        assignedPartitions: safeJsonParse<TopicPartition[]>(m.assigned_partitions, []),
         lastHeartbeat: m.last_heartbeat,
       })),
     }

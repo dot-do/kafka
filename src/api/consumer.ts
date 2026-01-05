@@ -5,6 +5,7 @@
 import type { Env } from '../index'
 import type { ConsumerRecord, TopicPartition, OffsetAndMetadata } from '../types/records'
 import type { ConsumerConfig, Consumer, RebalanceListener } from '../types/consumer'
+import { ConsumeError, ConsumerGroupError } from '../errors'
 
 /**
  * KafdoConsumer - Consumes messages from Kafdo topics
@@ -41,9 +42,16 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
   }
 
   /**
-   * Get the partition key string
+   * Get the partition key string for internal tracking (uses :: delimiter to support hyphenated topic names)
    */
   private partitionKey(tp: TopicPartition): string {
+    return `${tp.topic}::${tp.partition}`
+  }
+
+  /**
+   * Get the DO name key string (uses - delimiter for DO naming)
+   */
+  private doNameKey(tp: TopicPartition): string {
     return `${tp.topic}-${tp.partition}`
   }
 
@@ -75,7 +83,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to join consumer group: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to join consumer group: ${response.statusText}`)
     }
 
     const result = await response.json() as {
@@ -143,7 +151,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch offsets: ${response.statusText}`)
+      throw new ConsumeError(`Failed to fetch offsets: ${response.statusText}`)
     }
 
     const offsets = await response.json() as Record<string, number>
@@ -160,7 +168,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
         this.currentOffsets.set(key, 0)
       } else {
         // Start from end - fetch high watermark
-        const partitionId = this.env.TOPIC_PARTITION.idFromName(key)
+        const partitionId = this.env.TOPIC_PARTITION.idFromName(this.doNameKey(tp))
         const partitionStub = this.env.TOPIC_PARTITION.get(partitionId)
         const hwmResponse = await partitionStub.fetch('http://localhost/watermarks')
         if (hwmResponse.ok) {
@@ -220,7 +228,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
    */
   async subscribe(topics: string[]): Promise<void> {
     if (this.closed) {
-      throw new Error('Consumer is closed')
+      throw new ConsumeError('Consumer is closed')
     }
 
     this.subscribedTopics = [...new Set([...this.subscribedTopics, ...topics])]
@@ -251,7 +259,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
    */
   async poll(timeout: number = 1000): Promise<ConsumerRecord<K, V>[]> {
     if (this.closed) {
-      throw new Error('Consumer is closed')
+      throw new ConsumeError('Consumer is closed')
     }
 
     if (this.assignedPartitions.length === 0) {
@@ -277,7 +285,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
         const key = this.partitionKey(tp)
         const offset = this.currentOffsets.get(key) ?? 0
 
-        const partitionId = this.env.TOPIC_PARTITION.idFromName(key)
+        const partitionId = this.env.TOPIC_PARTITION.idFromName(this.doNameKey(tp))
         const partitionStub = this.env.TOPIC_PARTITION.get(partitionId)
 
         const response = await partitionStub.fetch(
@@ -306,8 +314,12 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
       })
 
     const results = await Promise.race([
-      Promise.all(fetchPromises),
-      new Promise<never[]>((resolve) => setTimeout(() => resolve([]), timeout)),
+      Promise.allSettled(fetchPromises).then(settled =>
+        settled
+          .filter((r): r is PromiseFulfilledResult<ConsumerRecord<K, V>[]> => r.status === 'fulfilled')
+          .map(r => r.value)
+      ),
+      new Promise<ConsumerRecord<K, V>[][]>((resolve) => setTimeout(() => resolve([]), timeout)),
     ])
 
     for (const partitionRecords of results) {
@@ -344,7 +356,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
     if (this.uncommittedOffsets.size === 0) return
 
     const offsets = Array.from(this.uncommittedOffsets.entries()).map(([key, offset]) => {
-      const [topic, partition] = key.split('-')
+      const [topic, partition] = key.split('::')
       return { topic, partition: parseInt(partition, 10), offset }
     })
 
@@ -359,7 +371,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to commit offsets: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to commit offsets: ${response.statusText}`)
     }
 
     this.uncommittedOffsets.clear()
@@ -378,7 +390,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
           metadata: om.metadata,
         }))
       : Array.from(this.uncommittedOffsets.entries()).map(([key, offset]) => {
-          const [topic, partition] = key.split('-')
+          const [topic, partition] = key.split('::')
           return { topic, partition: parseInt(partition, 10), offset }
         })
 
@@ -395,7 +407,7 @@ export class KafdoConsumer<K = string, V = unknown> implements Consumer<K, V> {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to commit offsets: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to commit offsets: ${response.statusText}`)
     }
 
     if (!offsets) {

@@ -11,6 +11,7 @@
 import { DurableObject } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import { initializeSchema } from '../schema/schema'
+import { safeJsonParse } from '../utils'
 
 /**
  * Message to append to the partition
@@ -85,9 +86,10 @@ export class TopicPartitionDO extends DurableObject<Record<string, unknown>> {
       return c.json(results)
     })
 
-    this.app.post('/read', async (c) => {
-      const body = await c.req.json<ReadOptions>()
-      const messages = await this.read(body)
+    this.app.get('/read', async (c) => {
+      const fromOffset = parseInt(c.req.query('offset') ?? '0', 10)
+      const maxRecords = parseInt(c.req.query('limit') ?? '100', 10)
+      const messages = await this.read({ fromOffset, maxRecords })
       return c.json(messages)
     })
 
@@ -100,12 +102,18 @@ export class TopicPartitionDO extends DurableObject<Record<string, unknown>> {
       const hw = await this.getHighWatermark()
       return c.json({ highWatermark: hw })
     })
+
+    this.app.get('/watermarks', async (c) => {
+      const low = await this.getLogStartOffset()
+      const high = await this.getHighWatermark()
+      return c.json({ low, high })
+    })
   }
 
   private async ensureInitialized() {
-    if (this.initialized) return
-
     await this.ctx.blockConcurrencyWhile(async () => {
+      if (this.initialized) return
+
       // Check if already initialized
       const tables = this.sql.exec<{ name: string }>(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='messages'`
@@ -133,31 +141,38 @@ export class TopicPartitionDO extends DurableObject<Record<string, unknown>> {
     await this.ensureInitialized()
 
     const timestamp = Date.now()
-    const value = typeof message.value === 'string' 
-      ? message.value 
+    const value = typeof message.value === 'string'
+      ? message.value
       : new TextDecoder().decode(message.value as ArrayBuffer)
     const headers = JSON.stringify(message.headers || {})
 
-    const result = this.sql.exec<{ offset: number }>(
-      `INSERT INTO messages (key, value, headers, timestamp, producer_id, sequence)
-       VALUES (?, ?, ?, ?, ?, ?)
-       RETURNING offset`,
-      message.key ?? null,
-      value,
-      headers,
-      timestamp,
-      message.producerId ?? null,
-      message.sequence ?? null
-    ).one()
+    this.sql.exec('BEGIN TRANSACTION')
+    try {
+      const result = this.sql.exec<{ offset: number }>(
+        `INSERT INTO messages (key, value, headers, timestamp, producer_id, sequence)
+         VALUES (?, ?, ?, ?, ?, ?)
+         RETURNING offset`,
+        message.key ?? null,
+        value,
+        headers,
+        timestamp,
+        message.producerId ?? null,
+        message.sequence ?? null
+      ).one()
 
-    // Update high watermark
-    this.sql.exec(
-      `UPDATE watermarks SET high_watermark = ?, updated_at = ? WHERE partition = 0`,
-      result.offset,
-      timestamp
-    )
+      // Update high watermark
+      this.sql.exec(
+        `UPDATE watermarks SET high_watermark = ?, updated_at = ? WHERE partition = 0`,
+        result.offset,
+        timestamp
+      )
 
-    return { offset: result.offset, timestamp }
+      this.sql.exec('COMMIT')
+      return { offset: result.offset, timestamp }
+    } catch (e) {
+      this.sql.exec('ROLLBACK')
+      throw e
+    }
   }
 
   /**
@@ -234,7 +249,7 @@ export class TopicPartitionDO extends DurableObject<Record<string, unknown>> {
       offset: row.offset,
       key: row.key,
       value: row.value,
-      headers: JSON.parse(row.headers),
+      headers: safeJsonParse<Record<string, string>>(row.headers, {}),
       timestamp: row.timestamp,
     }))
   }

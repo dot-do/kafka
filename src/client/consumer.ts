@@ -4,6 +4,7 @@
 
 import type { KafdoClientConfig } from './client'
 import type { ConsumerRecord, TopicPartition } from '../types/records'
+import { ConsumeError, ConsumerGroupError } from '../errors'
 
 export interface ConsumerOptions {
   /** Consumer group ID */
@@ -82,7 +83,7 @@ export class KafdoConsumerClient {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Failed to join consumer group: ${error}`)
+      throw new ConsumerGroupError(`Failed to join consumer group: ${error}`)
     }
 
     const result = (await response.json()) as JoinResult
@@ -118,7 +119,7 @@ export class KafdoConsumerClient {
    */
   async heartbeat(): Promise<{ needsRebalance: boolean }> {
     if (!this.memberId) {
-      throw new Error('Not connected to consumer group')
+      throw new ConsumerGroupError('Not connected to consumer group')
     }
 
     const response = await this.fetchFn(
@@ -137,7 +138,7 @@ export class KafdoConsumerClient {
     )
 
     if (!response.ok) {
-      throw new Error(`Heartbeat failed: ${response.statusText}`)
+      throw new ConsumerGroupError(`Heartbeat failed: ${response.statusText}`)
     }
 
     return response.json()
@@ -166,7 +167,7 @@ export class KafdoConsumerClient {
     )
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch messages: ${response.statusText}`)
+      throw new ConsumeError(`Failed to fetch messages: ${response.statusText}`)
     }
 
     const result = await response.json() as {
@@ -175,10 +176,10 @@ export class KafdoConsumerClient {
       messages: ConsumerRecord[]
     }
 
-    // Track uncommitted offsets
+    // Track uncommitted offsets (using :: delimiter to support hyphenated topic names)
     if (result.messages.length > 0) {
       const lastMessage = result.messages[result.messages.length - 1]
-      const key = `${topic}-${partition}`
+      const key = `${topic}::${partition}`
       this.uncommittedOffsets.set(key, lastMessage.offset)
     }
 
@@ -192,13 +193,13 @@ export class KafdoConsumerClient {
     offsets?: Array<{ topic: string; partition: number; offset: number }>
   ): Promise<void> {
     if (!this.memberId) {
-      throw new Error('Not connected to consumer group')
+      throw new ConsumerGroupError('Not connected to consumer group')
     }
 
     const toCommit =
       offsets ??
       Array.from(this.uncommittedOffsets.entries()).map(([key, offset]) => {
-        const [topic, partition] = key.split('-')
+        const [topic, partition] = key.split('::')
         return { topic, partition: parseInt(partition, 10), offset }
       })
 
@@ -220,7 +221,7 @@ export class KafdoConsumerClient {
     )
 
     if (!response.ok) {
-      throw new Error(`Failed to commit offsets: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to commit offsets: ${response.statusText}`)
     }
 
     if (!offsets) {
@@ -248,7 +249,7 @@ export class KafdoConsumerClient {
     )
 
     if (!response.ok) {
-      throw new Error(`Failed to get offsets: ${response.statusText}`)
+      throw new ConsumeError(`Failed to get offsets: ${response.statusText}`)
     }
 
     return response.json()

@@ -5,6 +5,7 @@
 import type { Env } from '../index'
 import type { ProducerRecord, RecordMetadata } from '../types/records'
 import type { ProducerConfig } from '../types/producer'
+import { TopicNotFoundError, ProduceError } from '../errors'
 
 /**
  * Default partitioner using murmur2 hash of the key
@@ -50,7 +51,7 @@ export class KafdoProducer {
 
     const response = await metadataStub.fetch(`http://localhost/topics/${topic}`)
     if (!response.ok) {
-      throw new Error(`Topic ${topic} not found`)
+      throw new TopicNotFoundError(`Topic ${topic} not found`)
     }
 
     const metadata = await response.json() as { partitions: Array<{ partition: number }> }
@@ -94,7 +95,7 @@ export class KafdoProducer {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to send message: ${response.statusText}`)
+      throw new ProduceError(`Failed to send message: ${response.statusText}`)
     }
 
     const result = await response.json() as { offset: number; timestamp: number }
@@ -116,7 +117,7 @@ export class KafdoProducer {
 
     for (const record of records) {
       const partition = await this.resolvePartition(record as ProducerRecord)
-      const key = `${record.topic}-${partition}`
+      const key = `${record.topic}::${partition}`
 
       if (!batches.has(key)) {
         batches.set(key, { partition, records: [] })
@@ -128,8 +129,8 @@ export class KafdoProducer {
     const results: RecordMetadata[] = []
 
     for (const [key, batch] of batches) {
-      const [topic] = key.split('-')
-      const partitionId = this.env.TOPIC_PARTITION.idFromName(key)
+      const [topic, partitionStr] = key.split('::')
+      const partitionId = this.env.TOPIC_PARTITION.idFromName(`${topic}-${partitionStr}`)
       const partitionStub = this.env.TOPIC_PARTITION.get(partitionId)
 
       const response = await partitionStub.fetch('http://localhost/append-batch', {
@@ -145,7 +146,7 @@ export class KafdoProducer {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to send batch: ${response.statusText}`)
+        throw new ProduceError(`Failed to send batch: ${response.statusText}`)
       }
 
       const batchResults = await response.json() as Array<{ offset: number; timestamp: number }>

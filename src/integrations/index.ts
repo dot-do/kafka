@@ -4,7 +4,7 @@
  * Pre-built integrations for common data sources and sinks.
  */
 
-// MondoDB CDC Integration
+// MongoDB CDC Integration
 export {
   KafdoPipeline,
   createKafdoPipeline,
@@ -23,7 +23,7 @@ export {
   type DeleteEvent,
   type CDCNamespace,
   type CDCConsumerConfig,
-} from './mondodb-cdc'
+} from './mongodb-cdc'
 
 // R2 Event Bridge Integration
 export {

@@ -1,22 +1,67 @@
 {
   "name": "kafdo",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Kafka-compatible streaming platform on Cloudflare Workers with Durable Object SQLite",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    },
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "author": "Nathan Clevenger",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nathanclevenger/kafdo.git"
+  },
+  "homepage": "https://github.com/nathanclevenger/kafdo#readme",
+  "bugs": {
+    "url": "https://github.com/nathanclevenger/kafdo/issues"
+  },
+  "keywords": [
+    "kafka",
+    "streaming",
+    "cloudflare",
+    "workers",
+    "durable-objects",
+    "event-streaming",
+    "message-queue",
+    "pub-sub",
+    "queue"
+  ],
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "prepublishOnly": "npm run build && vitest --run"
   },
   "dependencies": {
     "hono": "^4.6.0"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.5.0",
+    "@cloudflare/vitest-pool-workers": "^0.11.1",
     "@cloudflare/workers-types": "^4.20241127.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0",
-    "wrangler": "^3.93.0"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.54.0"
   }
 }

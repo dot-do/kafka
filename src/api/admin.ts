@@ -12,6 +12,7 @@ import type {
   OffsetInfo,
   PartitionMetadata,
 } from '../types/admin'
+import { TopicNotFoundError, ConsumerGroupError, KafdoError } from '../errors'
 
 /**
  * KafdoAdmin - Manages Kafdo topics and consumer groups
@@ -50,7 +51,7 @@ export class KafdoAdmin implements Admin {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Failed to create topic: ${error}`)
+      throw new KafdoError('TOPIC_CREATE_FAILED', `Failed to create topic: ${error}`)
     }
   }
 
@@ -65,7 +66,7 @@ export class KafdoAdmin implements Admin {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to delete topic: ${response.statusText}`)
+      throw new TopicNotFoundError(`Failed to delete topic: ${response.statusText}`)
     }
   }
 
@@ -77,7 +78,7 @@ export class KafdoAdmin implements Admin {
 
     const response = await metadataStub.fetch('http://localhost/topics')
     if (!response.ok) {
-      throw new Error(`Failed to list topics: ${response.statusText}`)
+      throw new KafdoError('LIST_TOPICS_FAILED', `Failed to list topics: ${response.statusText}`)
     }
 
     const topics = await response.json() as string[]
@@ -92,7 +93,7 @@ export class KafdoAdmin implements Admin {
 
     const response = await metadataStub.fetch(`http://localhost/topics/${topic}`)
     if (!response.ok) {
-      throw new Error(`Topic ${topic} not found`)
+      throw new TopicNotFoundError(`Topic ${topic} not found`)
     }
 
     const data = await response.json() as {
@@ -132,7 +133,7 @@ export class KafdoAdmin implements Admin {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to add partitions: ${response.statusText}`)
+      throw new TopicNotFoundError(`Failed to add partitions: ${response.statusText}`)
     }
   }
 
@@ -144,7 +145,7 @@ export class KafdoAdmin implements Admin {
 
     const response = await metadataStub.fetch('http://localhost/groups')
     if (!response.ok) {
-      throw new Error(`Failed to list groups: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to list groups: ${response.statusText}`)
     }
 
     const groups = await response.json() as string[]
@@ -160,7 +161,7 @@ export class KafdoAdmin implements Admin {
 
     const response = await groupStub.fetch('http://localhost/describe')
     if (!response.ok) {
-      throw new Error(`Failed to describe group: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to describe group: ${response.statusText}`)
     }
 
     const data = await response.json() as {
@@ -200,7 +201,7 @@ export class KafdoAdmin implements Admin {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to delete group: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to delete group: ${response.statusText}`)
     }
   }
 

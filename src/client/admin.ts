@@ -3,37 +3,12 @@
  */
 
 import type { KafdoClientConfig } from './client'
-import type { TopicPartition } from '../types/records'
-
-export interface TopicConfig {
-  topic: string
-  partitions: number
-  config?: Record<string, string>
-}
-
-export interface TopicMetadata {
-  topic: string
-  partitions: Array<{
-    partition: number
-    leader: string
-    replicas: string[]
-    isr: string[]
-  }>
-  config: Record<string, string>
-}
-
-export interface GroupDescription {
-  groupId: string
-  state: string
-  protocolType: string
-  protocol: string
-  members: Array<{
-    memberId: string
-    clientId: string
-    clientHost: string
-    assignment: TopicPartition[]
-  }>
-}
+import type {
+  TopicConfig,
+  TopicMetadata,
+  GroupDescription,
+} from '../types/admin'
+import { TopicNotFoundError, ConsumerGroupError, KafdoError } from '../errors'
 
 /**
  * KafdoAdminClient - HTTP client for admin operations
@@ -72,7 +47,7 @@ export class KafdoAdminClient {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Failed to create topic: ${error}`)
+      throw new KafdoError('TOPIC_CREATE_FAILED', `Failed to create topic: ${error}`)
     }
 
     return response.json()
@@ -87,7 +62,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to list topics: ${response.statusText}`)
+      throw new KafdoError('LIST_TOPICS_FAILED', `Failed to list topics: ${response.statusText}`)
     }
 
     const result = (await response.json()) as { topics: string[] }
@@ -104,9 +79,9 @@ export class KafdoAdminClient {
 
     if (!response.ok) {
       if (response.status === 404) {
-        throw new Error(`Topic ${topic} not found`)
+        throw new TopicNotFoundError(`Topic ${topic} not found`)
       }
-      throw new Error(`Failed to describe topic: ${response.statusText}`)
+      throw new TopicNotFoundError(`Failed to describe topic: ${response.statusText}`)
     }
 
     return response.json()
@@ -122,7 +97,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to delete topic: ${response.statusText}`)
+      throw new TopicNotFoundError(`Failed to delete topic: ${response.statusText}`)
     }
   }
 
@@ -140,7 +115,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to add partitions: ${response.statusText}`)
+      throw new TopicNotFoundError(`Failed to add partitions: ${response.statusText}`)
     }
   }
 
@@ -160,7 +135,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to get topic offsets: ${response.statusText}`)
+      throw new TopicNotFoundError(`Failed to get topic offsets: ${response.statusText}`)
     }
 
     return response.json()
@@ -179,7 +154,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to list groups: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to list groups: ${response.statusText}`)
     }
 
     const result = (await response.json()) as { groups: string[] }
@@ -195,7 +170,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to describe group: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to describe group: ${response.statusText}`)
     }
 
     return response.json()
@@ -211,7 +186,7 @@ export class KafdoAdminClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to delete group: ${response.statusText}`)
+      throw new ConsumerGroupError(`Failed to delete group: ${response.statusText}`)
     }
   }
 }

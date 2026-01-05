@@ -1,15 +1,15 @@
 /**
- * MondoDB CDC Integration
+ * MongoDB CDC Integration
  *
- * Provides a Pipeline adapter that sends MondoDB CDC events to Kafdo topics.
- * This allows real-time streaming of document changes from MondoDB to Kafdo.
+ * Provides a Pipeline adapter that sends MongoDB CDC events to Kafdo topics.
+ * This allows real-time streaming of document changes from MongoDB to Kafdo.
  */
 
 import type { Env } from '../index'
 import { createProducer } from '../api/producer'
 
 // ============================================================================
-// CDC Event Types (mirrors MondoDB's CDC schema)
+// CDC Event Types (mirrors MongoDB's CDC schema)
 // ============================================================================
 
 /**
@@ -78,7 +78,7 @@ export interface DeleteEvent extends CDCEventBase {
 export type CDCEvent = InsertEvent | UpdateEvent | DeleteEvent
 
 // ============================================================================
-// Pipeline Interface (compatible with MondoDB's CDCEmitter)
+// Pipeline Interface (compatible with MongoDB's CDCEmitter)
 // ============================================================================
 
 /**
@@ -122,9 +122,9 @@ function extractDocumentId(documentKey: DocumentKey): string {
 }
 
 /**
- * KafdoPipeline - Implements Pipeline interface for MondoDB CDC integration
+ * KafdoPipeline - Implements Pipeline interface for MongoDB CDC integration
  *
- * This adapter receives CDC events from MondoDB and publishes them to Kafdo topics.
+ * This adapter receives CDC events from MongoDB and publishes them to Kafdo topics.
  */
 export class KafdoPipeline implements Pipeline {
   private env: Env
@@ -224,7 +224,7 @@ export class KafdoPipeline implements Pipeline {
 // ============================================================================
 
 /**
- * Create a new Kafdo Pipeline for MondoDB CDC
+ * Create a new Kafdo Pipeline for MongoDB CDC
  */
 export function createKafdoPipeline(config: KafdoPipelineConfig): KafdoPipeline {
   return new KafdoPipeline(config)
