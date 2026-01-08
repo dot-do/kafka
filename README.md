@@ -1,460 +1,423 @@
 # kafka.do
 
-Kafka-compatible streaming platform on Cloudflare Workers with Durable Object SQLite.
+> Event Streaming. Edge-Native. Natural Language. AI-First.
 
-kafka.do brings the familiar Kafka programming model to the edge, running entirely on Cloudflare's global network. Each topic partition is backed by a Durable Object with SQLite storage, providing strong consistency and durability without managing any infrastructure.
+Confluent charges $0.10/GB for data in, $0.30/GB for data out, plus cluster fees, connector fees, and support tiers. Amazon MSK requires provisioning brokers, managing partitions, and paying for storage you don't use. Self-hosted Kafka means ZooKeeper, JVM tuning, and 3am pager alerts.
+
+**kafka.do** is the open-source alternative. Kafka semantics without Kafka operations. Deploys in seconds, not weeks. Streams that just work.
+
+## AI-Native API
+
+```typescript
+import { kafka } from 'kafka.do'           // Full SDK
+import { kafka } from 'kafka.do/tiny'      // Minimal client
+import { kafka } from 'kafka.do/streams'   // Streams DSL only
+```
+
+Natural language for event streaming:
+
+```typescript
+import { kafka } from 'kafka.do'
+
+// Talk to it like a colleague
+await kafka`stream orders`.produce({ orderId: '123', amount: 99.99 })
+await kafka`stream user events to analytics`
+await kafka`replay orders from yesterday`
+
+// Consume naturally
+for await (const record of kafka`consume from orders group order-processor`) {
+  console.log(`Processing ${record.key}: ${record.value.amount}`)
+}
+
+// Chain like sentences
+await kafka`orders`
+  .filter(o => o.amount > 100)
+  .map(o => ({ ...o, tier: 'premium' }))
+  .to(`high-value-orders`)
+```
+
+## The Problem
+
+Kafka infrastructure is complex and expensive:
+
+| What They Charge | The Reality |
+|------------------|-------------|
+| **Confluent Cloud** | $0.10/GB in, $0.30/GB out, $1.50/hr base |
+| **Amazon MSK** | $0.10/hr per broker + storage + networking |
+| **Self-Hosted** | 3+ brokers, ZooKeeper, DevOps team |
+| **Connectors** | $0.25/hr per connector (Confluent) |
+| **Schema Registry** | Extra service, extra cost, extra complexity |
+| **Operations** | Partition rebalancing, consumer lag, retention tuning |
+
+### The Managed Kafka Tax
+
+Modern "managed" Kafka still requires:
+
+- Provisioning cluster capacity upfront
+- Managing partition counts per topic
+- Monitoring consumer lag and rebalancing
+- Configuring retention policies everywhere
+- Debugging serialization issues
+- Running separate schema registries
+
+### The Developer Experience Gap
+
+```typescript
+// This is what Kafka looks like today
+const producer = new Kafka({
+  clientId: 'my-app',
+  brokers: ['localhost:9092'],
+  ssl: true,
+  sasl: { mechanism: 'plain', username: 'user', password: 'pass' }
+}).producer()
+
+await producer.connect()
+await producer.send({
+  topic: 'orders',
+  messages: [{
+    key: 'order-123',
+    value: JSON.stringify({ orderId: '123', amount: 99.99 }),
+    headers: { 'correlation-id': 'abc' }
+  }]
+})
+await producer.disconnect()
+```
+
+Six lines to send one message. Connection management. Manual serialization. This is 2024.
+
+## The Solution
+
+**kafka.do** reimagines event streaming for developers:
+
+```
+Confluent/MSK/Self-Hosted         kafka.do
+-----------------------------------------------------------------
+Provision clusters                Just use it
+$0.10-0.30/GB transfer            Pay for what you stream
+Manage partitions                 Auto-scaling partitions
+ZooKeeper/KRaft complexity        No coordination layer
+Connection pooling                Stateless HTTP or DO RPC
+Manual serialization              Native JSON/TypeScript
+Separate schema registry          Schemas in code
+Broker affinity                   Global edge distribution
+Consumer group rebalancing        Automatic coordination
+Retention configuration           Tiered storage automatic
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo kafka
+```
+
+A production-ready event streaming platform. Running on infrastructure you control.
+
+```typescript
+import { Kafka } from 'kafka.do'
+
+export default Kafka({
+  name: 'my-streams',
+  domain: 'streams.my-startup.com',
+})
+```
 
 ## Features
 
-- **Kafka-compatible API** - Familiar producer, consumer, and admin interfaces
-- **Edge-native** - Runs on Cloudflare Workers with global distribution
-- **Durable storage** - Messages stored in Durable Object SQLite
-- **Consumer groups** - Coordinated consumption with automatic partition assignment
-- **Offset management** - Automatic and manual offset commits
-- **HTTP Client SDK** - Access kafka.do from any JavaScript runtime
-- **Partitioning** - Key-based partitioning for message ordering
-- **Batch operations** - Efficient batch produce and consume
-
-## Installation
-
-```bash
-npm install kafka.do
-```
-
-## Quick Start
-
-### Producer API
-
-Send messages to topics using the Producer API within a Cloudflare Worker:
+### Producing Messages
 
 ```typescript
-import { createProducer } from 'kafka.do'
+// Just say it
+await kafka`stream order 123 to orders topic`
+await kafka`produce user signup to events`
+await kafka`send payment confirmed to transactions`
 
-export default {
-  async fetch(request: Request, env: Env) {
-    const producer = createProducer(env)
+// Natural with data
+await kafka`orders`.produce({ orderId: '123', amount: 99.99 })
+await kafka`events`.produce({ type: 'signup', userId: 'u-456' })
 
-    // Send a single message
-    const metadata = await producer.send({
-      topic: 'orders',
-      key: 'order-123',
-      value: { orderId: '123', amount: 99.99 },
-      headers: { source: 'web' }
-    })
-
-    console.log(`Message sent to partition ${metadata.partition} at offset ${metadata.offset}`)
-
-    // Send multiple messages in a batch
-    const results = await producer.sendBatch([
-      { topic: 'orders', key: 'order-124', value: { orderId: '124', amount: 49.99 } },
-      { topic: 'orders', key: 'order-125', value: { orderId: '125', amount: 149.99 } }
-    ])
-
-    await producer.close()
-
-    return new Response('Messages sent')
-  }
-}
-```
-
-### Consumer API
-
-Consume messages from topics using the Consumer API:
-
-```typescript
-import { createConsumer } from 'kafka.do'
-
-export default {
-  async fetch(request: Request, env: Env) {
-    const consumer = createConsumer(env, {
-      groupId: 'order-processor',
-      clientId: 'worker-1',
-      autoCommit: true,
-      fromBeginning: false
-    })
-
-    // Subscribe to topics
-    await consumer.subscribe(['orders'])
-
-    // Poll for messages
-    const records = await consumer.poll(1000)
-
-    for (const record of records) {
-      console.log(`Received: ${record.key} = ${JSON.stringify(record.value)}`)
-      console.log(`Topic: ${record.topic}, Partition: ${record.partition}, Offset: ${record.offset}`)
-    }
-
-    // Manual commit (if autoCommit is false)
-    await consumer.commit()
-
-    await consumer.close()
-
-    return new Response(`Processed ${records.length} messages`)
-  }
-}
-```
-
-#### Using Async Iterator
-
-```typescript
-const consumer = createConsumer(env, { groupId: 'my-group' })
-await consumer.subscribe(['orders'])
-
-for await (const record of consumer) {
-  console.log(`Processing: ${record.key}`)
-  // Process each record as it arrives
-}
-```
-
-### Admin API
-
-Manage topics and consumer groups:
-
-```typescript
-import { createAdmin } from 'kafka.do'
-
-export default {
-  async fetch(request: Request, env: Env) {
-    const admin = createAdmin(env)
-
-    // Create a topic with 3 partitions
-    await admin.createTopic({
-      topic: 'orders',
-      partitions: 3,
-      config: {
-        'retention.ms': '604800000' // 7 days
-      }
-    })
-
-    // List all topics
-    const topics = await admin.listTopics()
-    console.log('Topics:', topics)
-
-    // Describe a topic
-    const metadata = await admin.describeTopic('orders')
-    console.log('Partitions:', metadata.partitions.length)
-
-    // Add more partitions
-    await admin.createPartitions('orders', 6)
-
-    // List consumer groups
-    const groups = await admin.listGroups()
-
-    // Describe a consumer group
-    const groupInfo = await admin.describeGroup('order-processor')
-    console.log('Group state:', groupInfo.state)
-    console.log('Members:', groupInfo.members.length)
-
-    // Get partition offsets
-    const offsets = await admin.listOffsets('orders')
-    for (const [partition, info] of offsets) {
-      console.log(`Partition ${partition}: earliest=${info.earliest}, latest=${info.latest}`)
-    }
-
-    // Delete a topic
-    await admin.deleteTopic('old-topic')
-
-    // Delete a consumer group
-    await admin.deleteGroup('old-group')
-
-    await admin.close()
-
-    return new Response('Admin operations complete')
-  }
-}
-```
-
-### HTTP Client SDK
-
-Access kafka.do from any JavaScript environment using the HTTP Client SDK:
-
-```typescript
-import { KafkaClient } from 'kafka.do/client'
-
-// Create client pointing to your kafka.do deployment
-const client = new KafkaClient({
-  baseUrl: 'https://kafka.your-domain.workers.dev',
-  clientId: 'my-app',
-  timeout: 30000,
-  headers: {
-    'Authorization': 'Bearer your-token'
-  }
-})
-
-// Check service health
-const health = await client.health()
-console.log('Status:', health.status)
-
-// Producer operations
-const producer = client.producer({ defaultTopic: 'events' })
-
-await producer.send({
-  key: 'user-123',
-  value: { type: 'page_view', page: '/home' }
-})
-
-await producer.sendBatch([
-  { key: 'user-123', value: { type: 'click', button: 'signup' } },
-  { key: 'user-456', value: { type: 'page_view', page: '/about' } }
+// Batch naturally
+await kafka`orders`.produceBatch([
+  { orderId: '124', amount: 49.99 },
+  { orderId: '125', amount: 149.99 }
 ])
-
-// Consumer operations
-const consumer = client.consumer({
-  groupId: 'analytics-processor',
-  topics: ['events'],
-  autoCommit: true
-})
-
-// Connect and join consumer group
-const joinResult = await consumer.connect()
-console.log('Member ID:', joinResult.memberId)
-
-// Fetch messages from a partition
-const { messages } = await consumer.fetch('events', 0, { offset: 0, limit: 100 })
-
-for (const msg of messages) {
-  console.log(`${msg.key}: ${JSON.stringify(msg.value)}`)
-}
-
-// Commit offsets
-await consumer.commit()
-
-// Get partition offsets
-const offsets = await consumer.getOffsets('events', 0)
-console.log(`Earliest: ${offsets.earliest}, Latest: ${offsets.latest}`)
-
-// Disconnect from consumer group
-await consumer.disconnect()
-
-// Admin operations
-const admin = client.admin()
-
-await admin.createTopic({ topic: 'logs', partitions: 5 })
-
-const topics = await admin.listTopics()
-const topicInfo = await admin.describeTopic('logs')
-const groups = await admin.listGroups()
-const groupInfo = await admin.describeGroup('analytics-processor')
-
-await admin.addPartitions('logs', 10)
-await admin.deleteTopic('old-logs')
-await admin.deleteGroup('old-group')
 ```
 
-## API Reference
-
-### Producer
-
-#### `createProducer(env, config?)`
-
-Creates a new producer instance.
-
-| Config Option | Type | Default | Description |
-|--------------|------|---------|-------------|
-| `clientId` | `string` | `undefined` | Client identifier for tracking |
-| `batchSize` | `number` | `undefined` | Number of messages to batch |
-| `lingerMs` | `number` | `undefined` | Time to wait for batch to fill |
-| `acks` | `0 \| 1 \| 'all'` | `undefined` | Acknowledgment mode |
-| `retries` | `number` | `undefined` | Number of retry attempts |
-
-#### Producer Methods
-
-- `send(record)` - Send a single message, returns `RecordMetadata`
-- `sendBatch(records)` - Send multiple messages, returns `RecordMetadata[]`
-- `flush()` - Flush buffered messages
-- `close()` - Close the producer
-
-### Consumer
-
-#### `createConsumer(env, config, rebalanceListener?)`
-
-Creates a new consumer instance.
-
-| Config Option | Type | Default | Description |
-|--------------|------|---------|-------------|
-| `groupId` | `string` | *required* | Consumer group ID |
-| `clientId` | `string` | `'do-consumer'` | Client identifier |
-| `sessionTimeoutMs` | `number` | `30000` | Session timeout |
-| `heartbeatIntervalMs` | `number` | `3000` | Heartbeat interval |
-| `maxPollRecords` | `number` | `500` | Max records per poll |
-| `autoCommit` | `boolean` | `true` | Enable auto-commit |
-| `autoCommitIntervalMs` | `number` | `5000` | Auto-commit interval |
-| `fromBeginning` | `boolean` | `false` | Start from beginning |
-| `rebalanceTimeoutMs` | `number` | `60000` | Rebalance timeout |
-
-#### Consumer Methods
-
-- `subscribe(topics)` - Subscribe to topics
-- `unsubscribe()` - Unsubscribe from all topics
-- `poll(timeout?)` - Poll for records
-- `commit()` - Commit current offsets
-- `commitSync(offsets?)` - Commit specific offsets
-- `seek(partition, offset)` - Seek to offset
-- `pause(partitions)` - Pause consumption
-- `resume(partitions)` - Resume consumption
-- `close()` - Close consumer and leave group
-
-#### Rebalance Listener
+### Consuming Messages
 
 ```typescript
-const consumer = createConsumer(env, config, {
-  async onPartitionsAssigned(partitions) {
-    console.log('Assigned:', partitions)
-  },
-  async onPartitionsRevoked(partitions) {
-    console.log('Revoked:', partitions)
-  }
-})
+// Consume with natural language
+for await (const record of kafka`consume orders as order-processor`) {
+  console.log(`Order: ${record.value.orderId}`)
+}
+
+// Consumer groups are just words
+for await (const record of kafka`orders group analytics-team`) {
+  await analytics.track(record.value)
+}
+
+// Start from beginning
+for await (const record of kafka`orders from beginning`) {
+  await reprocess(record)
+}
+
+// Replay from timestamp
+for await (const record of kafka`orders since yesterday`) {
+  console.log(record)
+}
 ```
 
-### Admin
+### Stream Processing
 
-#### `createAdmin(env, config?)`
+```typescript
+// Filter, map, route - all natural
+await kafka`orders`
+  .filter(o => o.amount > 100)
+  .to(`high-value-orders`)
 
-Creates a new admin client.
+// Enrich on the fly
+await kafka`orders`
+  .map(async o => ({
+    ...o,
+    customer: await customers.get(o.customerId)
+  }))
+  .to(`enriched-orders`)
 
-| Config Option | Type | Default | Description |
-|--------------|------|---------|-------------|
-| `clientId` | `string` | `undefined` | Client identifier |
-| `requestTimeoutMs` | `number` | `undefined` | Request timeout |
+// Fan out to multiple topics
+await kafka`orders`
+  .branch(
+    [o => o.region === 'us', `us-orders`],
+    [o => o.region === 'eu', `eu-orders`],
+    [() => true, `other-orders`]
+  )
 
-#### Admin Methods
+// Aggregate windows
+await kafka`events`
+  .window(`5 minutes`)
+  .groupBy(e => e.userId)
+  .count()
+  .to(`user-activity`)
+```
 
-- `createTopic(config)` - Create a new topic
-- `deleteTopic(topic)` - Delete a topic
-- `listTopics()` - List all topics
-- `describeTopic(topic)` - Get topic metadata
-- `createPartitions(topic, count)` - Add partitions
-- `listGroups()` - List consumer groups
-- `describeGroup(groupId)` - Get group details
-- `deleteGroup(groupId)` - Delete a consumer group
-- `listOffsets(topic)` - Get partition offsets
-- `close()` - Close admin client
+### Topic Administration
 
-### HTTP Client
+```typescript
+// Create topics naturally
+await kafka`create topic orders with 3 partitions`
+await kafka`create topic logs with 7-day retention`
+await kafka`create topic events partitioned by user_id`
 
-#### `KafkaClient`
+// Describe topics
+const info = await kafka`describe orders`
+console.log(`Partitions: ${info.partitions}`)
 
-| Config Option | Type | Default | Description |
-|--------------|------|---------|-------------|
-| `baseUrl` | `string` | *required* | kafka.do service URL |
-| `clientId` | `string` | auto-generated | Client identifier |
-| `timeout` | `number` | `30000` | Request timeout (ms) |
-| `headers` | `object` | `{}` | Default headers |
-| `fetch` | `function` | `globalThis.fetch` | Custom fetch implementation |
+// Modify topics
+await kafka`add 3 partitions to orders`
+await kafka`set orders retention to 30 days`
+
+// List and manage
+const topics = await kafka`list topics`
+await kafka`delete topic old-events`
+```
+
+### Consumer Groups
+
+```typescript
+// Consumer groups are automatic
+for await (const msg of kafka`orders group my-processor`) {
+  // Automatic partition assignment
+  // Automatic offset commits
+  // Automatic rebalancing
+}
+
+// Check group status
+const status = await kafka`describe group my-processor`
+console.log(`Members: ${status.members}, Lag: ${status.lag}`)
+
+// Reset offsets naturally
+await kafka`reset group my-processor to earliest`
+await kafka`reset group my-processor to yesterday 9am`
+```
+
+## Promise Pipelining
+
+Chain operations without waiting:
+
+```typescript
+// All in one network round trip
+const processed = await kafka`orders`
+  .filter(o => o.status === 'pending')
+  .map(o => process(o))
+  .tap(o => kafka`processed-orders`.produce(o))
+  .collect()
+
+// Fan out and collect
+const [analytics, warehouse, notifications] = await Promise.all([
+  kafka`orders`.map(o => o.metrics).to(`analytics`),
+  kafka`orders`.map(o => o.inventory).to(`warehouse`),
+  kafka`orders`.map(o => o.alert).to(`notifications`)
+])
+```
+
+## Architecture
+
+### Edge-Native Design
+
+```
+Message Flow:
+
+Producer --> Cloudflare Edge --> Partition DO --> SQLite
+                  |                    |
+             Global PoP          Strong consistency
+                              (per-partition ordering)
+
+Consumer <-- Cloudflare Edge <-- Partition DO <-- SQLite
+                  |                    |
+            Nearest edge          Durable storage
+```
+
+### Durable Object per Partition
+
+```
+TopicDO (metadata, partitioning)
+  |
+  +-- PartitionDO-0 (messages, offsets)
+  |     |-- SQLite: Message log (hot)
+  |     +-- R2: Archived segments (cold)
+  |
+  +-- PartitionDO-1
+  |     |-- SQLite: Message log
+  |     +-- R2: Archived segments
+  |
+  +-- PartitionDO-N
+        |-- ...
+
+ConsumerGroupDO (membership, assignments)
+  |-- SQLite: Member state, offsets
+```
+
+### Storage Tiers
+
+| Tier | Storage | Latency | Use Case |
+|------|---------|---------|----------|
+| **Hot** | SQLite | <10ms | Recent messages, active consumption |
+| **Warm** | R2 | <100ms | Historical replay, batch processing |
+| **Cold** | R2 Archive | <1s | Compliance, long-term retention |
+
+Automatic tiering. No configuration needed.
+
+## vs Confluent/MSK/Self-Hosted
+
+| Feature | Confluent Cloud | Amazon MSK | kafka.do |
+|---------|----------------|------------|----------|
+| **Setup** | Minutes + config | Hours + VPC | Seconds |
+| **Pricing** | $0.10-0.30/GB | Per broker/hour | Per message |
+| **Scaling** | Manual partitions | Provision brokers | Automatic |
+| **Global** | Multi-region extra | Single region | Every edge |
+| **Operations** | Managed (mostly) | Semi-managed | Zero-ops |
+| **API** | Kafka protocol | Kafka protocol | Natural language |
+| **DX** | Complex SDKs | Complex SDKs | Tagged templates |
+| **Lock-in** | Confluent ecosystem | AWS ecosystem | MIT licensed |
+
+## Use Cases
+
+### Event Sourcing
+
+```typescript
+// Append events naturally
+await kafka`user-events`.produce({
+  type: 'account.created',
+  userId: 'u-123',
+  email: 'alice@example.com'
+})
+
+// Replay to rebuild state
+const user = await kafka`user-events`
+  .filter(e => e.userId === 'u-123')
+  .reduce((state, event) => applyEvent(state, event), {})
+```
+
+### Real-time Analytics
+
+```typescript
+// Stream to analytics
+await kafka`page-views`
+  .window(`1 minute`)
+  .groupBy(v => v.page)
+  .count()
+  .to(`page-view-counts`)
+
+// Query the stream
+const topPages = await kafka`page-view-counts`
+  .filter(c => c.count > 1000)
+  .collect()
+```
+
+### Microservice Communication
+
+```typescript
+// Order service produces
+await kafka`orders`.produce(order)
+
+// Inventory service consumes
+for await (const order of kafka`orders group inventory`) {
+  await inventory.reserve(order.items)
+}
+
+// Shipping service consumes (same topic, different group)
+for await (const order of kafka`orders group shipping`) {
+  await shipping.schedule(order)
+}
+```
+
+### Change Data Capture
+
+```typescript
+// Stream database changes
+await kafka`cdc.users`
+  .filter(change => change.op === 'insert')
+  .map(change => change.after)
+  .to(`new-users`)
+
+// Sync to search index
+for await (const user of kafka`new-users group search-indexer`) {
+  await elasticsearch.index('users', user)
+}
+```
 
 ## Integrations
 
-kafka.do includes pre-built integrations for common data sources.
-
-```typescript
-import {
-  KafkaPipeline,
-  createKafkaPipeline,
-  R2EventBridge,
-  createR2EventBridge
-} from 'kafka.do/integrations'
-```
-
 ### MongoDB CDC
 
-Stream MongoDB change events to kafka.do topics using the `KafkaPipeline` adapter. This integrates with MongoDB change streams to capture insert, update, and delete operations in real-time.
-
 ```typescript
-import { createKafkaPipeline, type CDCEvent } from 'kafka.do/integrations'
+// Stream MongoDB changes to kafka.do
+await kafka`stream mongodb changes to cdc.users`
 
-// Create a pipeline that routes events to topics based on database/collection
-const pipeline = createKafkaPipeline({
-  env,
-  topicPattern: 'cdc.{db}.{coll}' // e.g., cdc.mydb.users
-})
-
-// Send a CDC event (typically from a MongoDB change stream)
-await pipeline.send({
-  eventId: 'evt-123',
-  operationType: 'insert',
-  ns: { db: 'mydb', coll: 'users' },
-  documentKey: { _id: 'user-456' },
-  fullDocument: { _id: 'user-456', name: 'Alice', email: 'alice@example.com' },
-  timestamp: new Date().toISOString()
-})
-
-// Send multiple events in a batch
-await pipeline.sendBatch(cdcEvents)
-```
-
-**Factory functions:**
-- `createKafkaPipeline(config)` - Full configuration with custom topic patterns
-- `createFixedTopicPipeline(env, topic)` - All events go to a single topic
-- `createDatabaseTopicPipeline(env)` - Topics per database (`cdc.{db}`)
-- `createCollectionTopicPipeline(env)` - Topics per collection (`cdc.{db}.{coll}`)
-
-**Consumer helpers:**
-```typescript
-import { processCDCMessage, isInsertEvent } from 'kafka.do/integrations'
-
-// Process CDC messages with typed handlers
-await processCDCMessage(message, {
-  database: 'mydb',
-  collection: 'users',
-  groupId: 'cdc-processor',
-  onInsert: async (event) => console.log('New document:', event.fullDocument),
-  onUpdate: async (event) => console.log('Updated:', event.updateDescription),
-  onDelete: async (event) => console.log('Deleted:', event.documentKey)
-})
+// Or configure explicitly
+await kafka`create cdc pipeline from mongodb.users`
 ```
 
 ### R2 Event Bridge
 
-Stream R2 object events (creates, deletes) to kafka.do topics. Use this as a Queue consumer to capture R2 event notifications.
-
 ```typescript
-import { createR2EventBridge, R2EventBridge } from 'kafka.do/integrations'
-
-// Create an event bridge
-const bridge = createR2EventBridge({
-  env,
-  topicPattern: 'r2.{bucket}', // e.g., r2.my-bucket
-  bucketFilter: 'my-bucket',   // Optional: filter by bucket
-  keyPrefixFilter: 'uploads/'  // Optional: filter by key prefix
-})
-
-// Process R2 events (typically in a Queue consumer)
-export default {
-  async queue(batch: MessageBatch, env: Env) {
-    const bridge = createR2EventBridge({ env })
-
-    for (const message of batch.messages) {
-      const event = R2EventBridge.parseQueueMessage(message)
-      if (event) {
-        await bridge.processEvent(event)
-      }
-    }
+// Stream R2 events
+for await (const event of kafka`r2.my-bucket`) {
+  if (event.type === 'object-created') {
+    await processUpload(event.object)
   }
 }
 ```
 
-**Consumer helpers:**
-```typescript
-import { processR2Event, isR2ObjectCreated } from 'kafka.do/integrations'
+### Webhooks
 
-// Process R2 events with typed handlers
-await processR2Event(message, {
-  bucketFilter: 'my-bucket',
-  onObjectCreated: async (event) => {
-    console.log('Created:', event.object.key, event.object.size)
-  },
-  onObjectDeleted: async (event) => {
-    console.log('Deleted:', event.key)
-  }
-})
+```typescript
+// Ingest webhooks to streams
+await kafka`stripe-events`.fromWebhook('/webhooks/stripe')
+await kafka`github-events`.fromWebhook('/webhooks/github')
 ```
 
 ## Configuration
 
 ### Wrangler Configuration
-
-Add the following to your `wrangler.toml`:
 
 ```toml
 name = "my-kafka-app"
@@ -484,70 +447,100 @@ interface Env {
 }
 ```
 
-## HTTP API Endpoints
+## Why Open Source for Event Streaming?
 
-kafka.do exposes a REST API for external access:
+### 1. No Vendor Lock-in
 
-### Producer Endpoints
+Confluent and AWS want you dependent on their ecosystems. Open source means:
+- Standard semantics, edge-native implementation
+- No broker affinity or cluster dependencies
+- Community-driven development
+- MIT licensed, forever
 
-- `POST /topics/:topic/produce` - Produce a single message
-- `POST /topics/:topic/produce-batch` - Produce multiple messages
+### 2. Developer Experience First
 
-### Consumer Endpoints
+Kafka was built for infrastructure teams. kafka.do is built for developers:
+- Natural language over configuration objects
+- Tagged templates over SDK boilerplate
+- Streams DSL for processing
+- TypeScript-native with full types
 
-- `GET /topics/:topic/partitions/:partition/messages` - Read messages
-- `GET /topics/:topic/partitions/:partition/offsets` - Get partition offsets
+### 3. Edge-Native Performance
 
-### Consumer Group Endpoints
+Traditional Kafka requires round trips to regional clusters. kafka.do:
+- Runs at the edge, closest to your users
+- Per-partition Durable Objects for isolation
+- SQLite for hot data, R2 for archives
+- Global by default
 
-- `POST /consumer-groups/:groupId/join` - Join a consumer group
-- `POST /consumer-groups/:groupId/heartbeat` - Send heartbeat
-- `POST /consumer-groups/:groupId/commit` - Commit offsets
-- `POST /consumer-groups/:groupId/leave` - Leave consumer group
-- `GET /consumer-groups/:groupId` - Describe consumer group
+### 4. Cost Liberation
 
-### Admin Endpoints
+Stop paying for idle brokers and data transfer:
+- Pay per message, not per broker
+- No ingress/egress fees within Cloudflare
+- No reserved capacity
+- No connector licensing
 
-- `GET /admin/topics` - List topics
-- `POST /admin/topics` - Create topic
-- `GET /admin/topics/:topic` - Describe topic
-- `DELETE /admin/topics/:topic` - Delete topic
-- `POST /admin/topics/:topic/partitions` - Add partitions
-- `GET /admin/topics/:topic/offsets` - Get topic offsets
-- `GET /admin/groups` - List consumer groups
-- `GET /admin/groups/:groupId` - Describe consumer group
-- `DELETE /admin/groups/:groupId` - Delete consumer group
+## Roadmap
 
-### Health Endpoints
+### Core Streaming
+- [x] Produce messages
+- [x] Consume with groups
+- [x] Partition assignment
+- [x] Offset management
+- [x] Batch operations
+- [ ] Exactly-once semantics
+- [ ] Transactions
+- [ ] Compacted topics
 
-- `GET /` - Service info
-- `GET /health` - Health check
+### Stream Processing
+- [x] Filter/Map/Branch
+- [x] Windowing
+- [x] Aggregations
+- [ ] Joins
+- [ ] State stores
+- [ ] Interactive queries
 
-## Requirements
+### Integrations
+- [x] MongoDB CDC
+- [x] R2 Event Bridge
+- [x] Webhook ingestion
+- [ ] PostgreSQL CDC
+- [ ] MySQL CDC
+- [ ] Supabase Realtime
 
-- Cloudflare Workers environment
-- Durable Objects with SQLite storage enabled
-- Node.js 18+ (for local development)
+### Operations
+- [x] Topic management
+- [x] Consumer group management
+- [x] Offset management
+- [ ] Metrics export
+- [ ] Dead letter queues
+- [ ] Schema registry
 
-## Development
+## Contributing
+
+kafka.do is open source under the MIT license.
 
 ```bash
-# Install dependencies
-npm install
-
-# Run locally
-npm run dev
-
-# Run tests
-npm test
-
-# Type check
-npm run typecheck
-
-# Deploy to Cloudflare
-npm run deploy
+git clone https://github.com/dotdo/kafka.do
+cd kafka.do
+pnpm install
+pnpm test
 ```
 
 ## License
 
-MIT
+MIT License - Stream freely.
+
+---
+
+<p align="center">
+  <strong>Kafka without the ops.</strong>
+  <br />
+  Edge-native. Natural language. Zero infrastructure.
+  <br /><br />
+  <a href="https://kafka.do">Website</a> |
+  <a href="https://docs.kafka.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/kafka.do">GitHub</a>
+</p>
