@@ -1,0 +1,27 @@
+name: kafka-do
+version: 0.1.0
+description: Kafka SDK for the .do platform - Event Streaming with Fibers and Channels
+
+authors:
+  - .do Platform <platform@do.gt>
+
+license: MIT
+
+crystal: ">= 1.10.0"
+
+dependencies:
+  json_mapping:
+    github: crystal-lang/json_mapping
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: ~> 1.6
+
+targets:
+  spec:
+    main: spec/spec_helper.cr
+
+scripts:
+  test: crystal spec
+  lint: bin/ameba

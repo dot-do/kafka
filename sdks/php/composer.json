@@ -1,0 +1,58 @@
+{
+    "name": "kafka.do/sdk",
+    "description": "Kafka SDK for PHP - Event streaming with generators and closures",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "kafka",
+        "event-streaming",
+        "messaging",
+        "sdk",
+        "rpc",
+        "dotdo"
+    ],
+    "authors": [
+        {
+            "name": "DotDo",
+            "email": "dev@dotdo.io"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "KafkaDo\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "KafkaDo\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "analyze": "phpstan analyse src --level=8"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "KafkaDo\\Laravel\\KafkaServiceProvider"
+            ],
+            "aliases": {
+                "Kafka": "KafkaDo\\Facades\\Kafka"
+            }
+        }
+    }
+}
