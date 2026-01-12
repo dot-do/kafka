@@ -1,0 +1,3 @@
+module KafkaDoPackageTests {
+    header "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/include/KafkaDoPackageTests-Swift.h"
+}

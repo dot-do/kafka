@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/master.swiftdeps"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Admin.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.dia"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Consumer.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.dia"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Kafka.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.dia"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Message.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.dia"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Producer.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.dia"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Stream.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.dia"
+  }
+}

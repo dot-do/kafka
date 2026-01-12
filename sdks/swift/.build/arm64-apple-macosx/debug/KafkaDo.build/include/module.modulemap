@@ -1,0 +1,3 @@
+module KafkaDo {
+    header "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/include/KafkaDo-Swift.h"
+}

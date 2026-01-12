@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/master.swiftdeps"
+  },
+  "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.d",
+    "object": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.dia"
+  }
+}

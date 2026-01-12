@@ -1,10 +1,13 @@
-# kafka-do
+# kafka.do
 
 > Event Streaming for Ruby. Blocks. Enumerables. Zero Ops.
 
 ```ruby
-kafka.producer('orders') do |producer|
-  producer.send(order_id: '123', amount: 99.99)
+kafka = Kafka.new(['broker1:9092'])
+
+kafka.producer.tap do |producer|
+  producer.produce({ order_id: '123', amount: 99.99 }, topic: 'orders')
+  producer.deliver_messages
 end
 ```
 
@@ -14,7 +17,7 @@ Blocks for resource management. Enumerables for iteration. The Ruby way.
 
 ```ruby
 # Gemfile
-gem 'kafka-do'
+gem 'kafka.do'
 ```
 
 ```bash
@@ -24,27 +27,28 @@ bundle install
 Or install directly:
 
 ```bash
-gem install kafka-do
+gem install kafka.do
 ```
 
-Requires Ruby 3.1+.
+Requires Ruby 2.6+.
 
 ## Quick Start
 
 ```ruby
-require 'kafka-do'
+require 'kafka_do'
 
-kafka = Kafka::Client.new
+kafka = Kafka.new(['broker1:9092'])
 
 # Produce
-kafka.producer('orders') do |producer|
-  producer.send(order_id: '123', amount: 99.99)
-end
+producer = kafka.producer
+producer.produce({ order_id: '123', amount: 99.99 }, topic: 'orders')
+producer.deliver_messages
 
 # Consume
-kafka.consumer('orders', group: 'my-processor').each do |record|
-  puts "Received: #{record.value}"
-  record.commit
+consumer = kafka.consumer(group_id: 'my-processor')
+consumer.subscribe('orders')
+consumer.each_message do |message|
+  puts "Received: #{message.value}"
 end
 ```
 
@@ -53,75 +57,55 @@ end
 ### Simple Producer
 
 ```ruby
-kafka = Kafka::Client.new
+kafka = Kafka.new(['broker1:9092'])
+producer = kafka.producer
 
-kafka.producer('orders') do |producer|
-  # Send single message
-  producer.send(order_id: '123', amount: 99.99)
+# Send single message
+producer.produce('Hello!', topic: 'orders')
 
-  # Send with key for partitioning
-  producer.send({ order_id: '123', amount: 99.99 }, key: 'customer-456')
+# Send with key for partitioning
+producer.produce({ order_id: '123', amount: 99.99 }, topic: 'orders', key: 'customer-456')
 
-  # Send with headers
-  producer.send(
-    { order_id: '123' },
-    key: 'customer-456',
-    headers: { 'correlation-id' => 'abc-123' }
-  )
-end
+# Send with headers
+producer.produce(
+  { order_id: '123' },
+  topic: 'orders',
+  key: 'customer-456',
+  headers: { 'correlation-id' => 'abc-123' }
+)
+
+# Deliver all buffered messages
+producer.deliver_messages
 ```
 
 ### Batch Producer
 
 ```ruby
-kafka.producer('orders') do |producer|
-  # Send batch
-  producer.send_batch([
-    { order_id: '124', amount: 49.99 },
-    { order_id: '125', amount: 149.99 },
-    { order_id: '126', amount: 29.99 }
-  ])
+producer = kafka.producer
 
-  # Send batch with keys
-  producer.send_batch([
-    { key: 'cust-1', value: { order_id: '124' } },
-    { key: 'cust-2', value: { order_id: '125' } }
-  ])
-end
+# Send multiple messages
+producer.produce({ order_id: '124', amount: 49.99 }, topic: 'orders')
+producer.produce({ order_id: '125', amount: 149.99 }, topic: 'orders')
+producer.produce({ order_id: '126', amount: 29.99 }, topic: 'orders')
+
+# Deliver all at once
+producer.deliver_messages
 ```
 
-### Async Producer
+### Producer with Options
 
 ```ruby
-producer = kafka.async_producer('orders')
+producer = kafka.producer(
+  compression_codec: :gzip,
+  required_acks: -1,  # Wait for all replicas
+  max_buffer_size: 1000
+)
 
-# Non-blocking send
-producer.send(order_id: '123', amount: 99.99)
-producer.send(order_id: '124', amount: 49.99)
+producer.produce(order, topic: 'orders')
+producer.deliver_messages
 
-# Force delivery of buffered messages
-producer.deliver
-
-# With delivery callbacks
-producer.send(order, &:delivery_report)
-
-producer.on_delivery do |report|
-  if report.error?
-    puts "Delivery failed: #{report.error}"
-  else
-    puts "Delivered to partition #{report.partition} offset #{report.offset}"
-  end
-end
-```
-
-### Transactional Producer
-
-```ruby
-kafka.transaction('orders') do |tx|
-  tx.send(order_id: '123', status: 'created')
-  tx.send(order_id: '123', status: 'validated')
-  # Automatically commits on success, aborts on exception
-end
+# Shutdown gracefully (delivers remaining messages)
+producer.shutdown
 ```
 
 ## Consuming Messages
@@ -129,119 +113,110 @@ end
 ### Basic Consumer with Block
 
 ```ruby
-kafka.consumer('orders', group: 'order-processor').each do |record|
-  puts "Topic: #{record.topic}"
-  puts "Partition: #{record.partition}"
-  puts "Offset: #{record.offset}"
-  puts "Key: #{record.key}"
-  puts "Value: #{record.value}"
-  puts "Timestamp: #{record.timestamp}"
-  puts "Headers: #{record.headers}"
+consumer = kafka.consumer(group_id: 'order-processor')
+consumer.subscribe('orders')
 
-  process_order(record.value)
-  record.commit
+consumer.each_message do |message|
+  puts "Topic: #{message.topic}"
+  puts "Partition: #{message.partition}"
+  puts "Offset: #{message.offset}"
+  puts "Key: #{message.key}"
+  puts "Value: #{message.value}"
+  puts "Timestamp: #{message.timestamp}"
+  puts "Headers: #{message.headers}"
+
+  process_order(message.value)
 end
 ```
 
 ### Consumer with Enumerable Methods
 
 ```ruby
-consumer = kafka.consumer('orders', group: 'processor')
+consumer = kafka.consumer(group_id: 'processor')
+consumer.subscribe('orders')
 
-# Select and process
-consumer
-  .select { |r| r.value[:amount] > 100 }
-  .map(&:value)
-  .each { |order| process_high_value_order(order) }
-
-# Take specific number
-consumer.take(10).each do |record|
-  process_order(record.value)
-  record.commit
+# Take specific number using Enumerator
+consumer.each_message.take(10).each do |message|
+  process_order(message.value)
 end
 ```
 
 ### Consumer with Options
 
 ```ruby
-consumer = kafka.consumer('orders', group: 'processor',
-  offset: :earliest,
-  auto_commit: true,
-  max_poll_records: 100,
-  session_timeout: 30_000
+consumer = kafka.consumer(
+  group_id: 'processor',
+  auto_offset_reset: :earliest,
+  enable_auto_commit: true,
+  session_timeout: 60,
+  heartbeat_interval: 15
 )
 
-consumer.each do |record|
-  process_order(record.value)
-  # Auto-committed
-end
-```
+consumer.subscribe('orders', start_from_beginning: true)
 
-### Consumer from Timestamp
-
-```ruby
-yesterday = Time.now - 86_400
-
-consumer = kafka.consumer('orders', group: 'replay',
-  offset: yesterday
-)
-
-consumer.each do |record|
-  puts "Replaying: #{record.value}"
+consumer.each_message do |message|
+  process_order(message.value)
 end
 ```
 
 ### Batch Consumer
 
 ```ruby
-consumer = kafka.batch_consumer('orders', group: 'batch-processor',
-  batch_size: 100,
-  batch_timeout: 5.0
-)
+consumer = KafkaDo::BatchConsumer.new(kafka, group_id: 'batch-processor')
+consumer.subscribe('orders')
 
-consumer.each_batch do |batch|
-  batch.each do |record|
-    process_order(record.value)
+consumer.each_batch(batch_size: 100, batch_timeout: 5.0) do |batch|
+  batch.each do |message|
+    process_order(message.value)
   end
-  batch.commit
 end
 ```
 
-### Parallel Consumer with Thread Pool
+### Manual Offset Management
 
 ```ruby
-require 'concurrent'
+consumer = kafka.consumer(group_id: 'manual', enable_auto_commit: false)
+consumer.subscribe('orders')
 
-pool = Concurrent::FixedThreadPool.new(10)
-consumer = kafka.consumer('orders', group: 'parallel-processor')
-
-consumer.each do |record|
-  pool.post do
-    process_order(record.value)
-    record.commit
+consumer.each_message do |message|
+  begin
+    process_order(message.value)
+    consumer.commit_offsets(message)
+  rescue ProcessingError => e
+    # Handle error without committing
+    log_error(e)
   end
 end
-
-pool.shutdown
-pool.wait_for_termination
 ```
 
-### Consumer with Fibers (Async)
+### Seek to Position
 
 ```ruby
-require 'async'
-require 'kafka-do/async'
+consumer = kafka.consumer(group_id: 'replay')
+consumer.subscribe('orders')
 
-Async do
-  kafka = Kafka::AsyncClient.new
+# Seek to specific offset
+tp = KafkaDo::TopicPartition.new('orders', 0)
+consumer.seek(tp, 1000)
 
-  kafka.consumer('orders', group: 'async-processor').each do |record|
-    Async do
-      process_order(record.value)
-      record.commit
-    end
-  end
-end
+# Or seek to beginning/end
+consumer.seek_to_beginning(tp)
+consumer.seek_to_end(tp)
+```
+
+### Pause and Resume
+
+```ruby
+tp = KafkaDo::TopicPartition.new('orders', 0)
+
+# Pause consumption
+consumer.pause(tp)
+
+# Resume consumption
+consumer.resume(tp)
+
+# Check paused partitions
+consumer.paused  # => [TopicPartition]
 ```
 
 ## Stream Processing
@@ -250,56 +225,66 @@ end
 
 ```ruby
 kafka.stream('orders')
-  .filter { |order| order[:amount] > 100 }
-  .map { |order| order.merge(tier: 'premium') }
+  .filter { |msg| msg.value['amount'] > 100 }
+  .map { |msg| msg.value.merge(tier: 'premium') }
   .to('high-value-orders')
 ```
 
-### Windowed Aggregations
+### Peek for Side Effects
 
 ```ruby
 kafka.stream('orders')
-  .window(tumbling: '5m')
-  .group_by { |order| order[:customer_id] }
-  .count
-  .each do |key, window|
-    puts "Customer #{key}: #{window.value} orders in #{window.start}-#{window.end}"
-  end
+  .peek { |msg| logger.info("Processing: #{msg.key}") }
+  .filter { |msg| msg.value['status'] == 'completed' }
+  .to('completed-orders')
 ```
 
-### Joins
+### Transform Keys
 
 ```ruby
-orders = kafka.stream('orders')
-customers = kafka.stream('customers')
+kafka.stream('orders')
+  .map_key { |msg| msg.value['customer_id'] }
+  .to('orders-by-customer')
+```
 
-orders.join(customers,
-  on: ->(order, customer) { order[:customer_id] == customer[:id] },
-  window: '1h'
-).each do |order, customer|
-  puts "Order by #{customer[:name]}"
-end
+### Flat Map (One-to-Many)
+
+```ruby
+kafka.stream('orders')
+  .flat_map { |msg| msg.value['items'] }
+  .to('order-items')
 ```
 
 ### Branching
 
 ```ruby
-kafka.stream('orders').branch(
-  [->(o) { o[:region] == 'us' }, 'us-orders'],
-  [->(o) { o[:region] == 'eu' }, 'eu-orders'],
-  [->(_) { true }, 'other-orders']
+high_value, low_value = kafka.stream('orders').branch(
+  ->(msg) { msg.value['amount'] > 100 },
+  ->(msg) { msg.value['amount'] <= 100 }
 )
+
+high_value.to('high-value-orders')
+low_value.to('low-value-orders')
 ```
 
 ### Aggregations
 
 ```ruby
 kafka.stream('orders')
-  .group_by { |order| order[:customer_id] }
-  .reduce(0) { |total, order| total + order[:amount] }
-  .each do |customer_id, total|
-    puts "Customer #{customer_id} total: $#{total}"
-  end
+  .group_by { |msg| msg.value['customer_id'] }
+  .count
+  .each { |customer_id, count| puts "#{customer_id}: #{count} orders" }
+```
+
+### Merge Streams
+
+```ruby
+stream_a = kafka.stream('topic-a')
+stream_b = kafka.stream('topic-b')
+
+stream_a.merge(stream_b)
+  .filter { |msg| msg.value['active'] }
+  .to('merged-topic')
 ```
 
 ## Topic Administration
@@ -309,24 +294,42 @@ admin = kafka.admin
 
 # Create topic
 admin.create_topic('orders',
-  partitions: 3,
-  retention_ms: 7 * 24 * 60 * 60 * 1000 # 7 days
+  num_partitions: 3,
+  replication_factor: 2,
+  config: { 'retention.ms' => '604800000' }
 )
+
+# Create multiple topics
+admin.create_topics([
+  { name: 'orders', num_partitions: 3 },
+  { name: 'payments', num_partitions: 3 }
+])
 
 # List topics
 admin.list_topics.each do |topic|
-  puts "#{topic.name}: #{topic.partitions} partitions"
+  puts topic
 end
 
 # Describe topic
-info = admin.describe_topic('orders')
-puts "Partitions: #{info.partitions}"
-puts "Retention: #{info.retention_ms}ms"
+metadata = admin.describe_topic('orders')
+puts "Name: #{metadata.name}"
+puts "Partitions: #{metadata.partitions}"
+puts "Replication Factor: #{metadata.replication_factor}"
+puts "Config: #{metadata.config}"
 
-# Alter topic
-admin.alter_topic('orders',
-  retention_ms: 30 * 24 * 60 * 60 * 1000 # 30 days
-)
+# Describe partitions
+admin.describe_partitions('orders').each do |p|
+  puts "Partition #{p.partition}: leader=#{p.leader}, replicas=#{p.replicas}"
+end
+
+# Get partition numbers
+admin.partitions_for('orders')  # => [0, 1, 2]
+
+# Alter topic config
+admin.alter_topic_config('orders', { 'retention.ms' => '2592000000' })
+
+# Create additional partitions
+admin.create_partitions('orders', 6)  # Increase to 6 partitions
 
 # Delete topic
 admin.delete_topic('old-events')
@@ -338,37 +341,56 @@ admin.delete_topic('old-events')
 admin = kafka.admin
 
 # List groups
-admin.list_groups.each do |group|
-  puts "Group: #{group.id}, Members: #{group.member_count}"
+admin.list_consumer_groups.each do |group_id|
+  puts "Group: #{group_id}"
 end
 
 # Describe group
-info = admin.describe_group('order-processor')
-puts "State: #{info.state}"
-puts "Members: #{info.members}"
-puts "Total Lag: #{info.total_lag}"
+metadata = admin.describe_consumer_group('order-processor')
+puts "State: #{metadata.state}"
+puts "Members: #{metadata.members}"
+puts "Coordinator: #{metadata.coordinator}"
 
-# Reset offsets
-admin.reset_offsets('order-processor', 'orders', :earliest)
+# Fetch committed offsets
+offsets = admin.fetch_offsets('order-processor')
+offsets.each do |tp, offset|
+  puts "#{tp}: #{offset}"
+end
 
-# Reset to timestamp
-admin.reset_offsets('order-processor', 'orders', yesterday)
+# Reset offsets to earliest
+admin.reset_offsets('order-processor', 'orders')
+
+# Reset offsets to latest
+admin.reset_offsets_to_latest('order-processor', 'orders')
+
+# Set specific offsets
+admin.set_offsets('order-processor', 'orders', { 0 => 1000, 1 => 2000 })
+
+# List topic offsets (earliest/latest)
+admin.list_topic_offsets('orders').each do |p|
+  puts "Partition #{p[:partition]}: #{p[:low]} - #{p[:high]}"
+end
+
+# Delete consumer group
+admin.delete_consumer_group('old-processor')
 ```
 
 ## Error Handling
 
 ```ruby
 begin
-  kafka.producer('orders') do |producer|
-    producer.send(order)
-  end
-rescue Kafka::TopicNotFoundError
-  puts 'Topic not found'
-rescue Kafka::MessageTooLargeError
+  producer = kafka.producer
+  producer.produce(order, topic: 'orders')
+  producer.deliver_messages
+rescue KafkaDo::TopicNotFoundError => e
+  puts "Topic not found: #{e.topic}"
+rescue KafkaDo::TopicAlreadyExistsError => e
+  puts "Topic already exists: #{e.topic}"
+rescue KafkaDo::MessageTooLargeError
   puts 'Message too large'
-rescue Kafka::TimeoutError
+rescue KafkaDo::TimeoutError
   puts 'Request timed out'
-rescue Kafka::Error => e
+rescue KafkaDo::Error => e
   puts "Kafka error: #{e.code} - #{e.message}"
 
   if e.retriable?
@@ -380,65 +402,112 @@ end
 ### Exception Hierarchy
 
 ```ruby
-Kafka::Error # Base class
-  Kafka::TopicNotFoundError
-  Kafka::PartitionNotFoundError
-  Kafka::MessageTooLargeError
-  Kafka::NotLeaderError
-  Kafka::OffsetOutOfRangeError
-  Kafka::GroupCoordinatorError
-  Kafka::RebalanceInProgressError
-  Kafka::UnauthorizedError
-  Kafka::QuotaExceededError
-  Kafka::TimeoutError
-  Kafka::DisconnectedError
-  Kafka::SerializationError
+KafkaDo::Error                    # Base class
+  KafkaDo::ConnectionError        # Connection issues (retriable)
+  KafkaDo::TimeoutError           # Timeouts (retriable)
+  KafkaDo::ProducerError          # Producer errors
+  KafkaDo::ConsumerError          # Consumer errors
+  KafkaDo::AdminError             # Admin errors
+  KafkaDo::TopicNotFoundError     # Topic doesn't exist
+  KafkaDo::TopicAlreadyExistsError # Topic already exists
+  KafkaDo::PartitionNotFoundError # Partition doesn't exist
+  KafkaDo::MessageTooLargeError   # Message size exceeded
+  KafkaDo::OffsetOutOfRangeError  # Invalid offset (retriable)
+  KafkaDo::GroupCoordinatorError  # Group coordinator issues (retriable)
+  KafkaDo::RebalanceInProgressError # Rebalance in progress (retriable)
+  KafkaDo::NotLeaderError         # Not leader for partition (retriable)
+  KafkaDo::UnauthorizedError      # Authorization failed
+  KafkaDo::QuotaExceededError     # Quota exceeded (retriable)
+  KafkaDo::DisconnectedError      # Disconnected (retriable)
+  KafkaDo::SerializationError     # Serialization failed
+  KafkaDo::ClosedError            # Client is closed
 ```
 
-### Dead Letter Queue Pattern
+## Testing
+
+### Using the Mock Client
 
 ```ruby
-consumer = kafka.consumer('orders', group: 'processor')
-dlq_producer = kafka.producer('orders-dlq')
+require 'kafka_do/testing'
 
-consumer.each do |record|
-  begin
-    process_order(record.value)
-  rescue ProcessingError => e
-    dlq_producer.send({
-      original_record: record.value,
-      error: e.message,
-      timestamp: Time.now.iso8601
-    }, headers: {
-      'original-topic' => record.topic,
-      'original-partition' => record.partition.to_s,
-      'original-offset' => record.offset.to_s
-    })
+RSpec.configure do |config|
+  config.before(:each) do
+    KafkaDo::Testing.reset!
   end
-  record.commit
 end
 ```
 
-### Retry with Exponential Backoff
+### Testing Producers
 
 ```ruby
-def with_retry(max_attempts: 3, base_delay: 1)
-  attempts = 0
-  begin
-    attempts += 1
-    yield
-  rescue Kafka::Error => e
-    raise unless e.retriable? && attempts < max_attempts
+require 'kafka_do/testing'
 
-    delay = base_delay * (2 ** (attempts - 1))
-    sleep(delay + rand(0.0..delay * 0.1))
-    retry
+RSpec.describe OrderPublisher do
+  before { KafkaDo::Testing.reset! }
+
+  it 'publishes order to Kafka' do
+    kafka = KafkaDo::Testing.client
+
+    publisher = OrderPublisher.new(kafka)
+    publisher.publish(order_id: '123', amount: 99.99)
+
+    messages = KafkaDo::Testing.messages('orders')
+    expect(messages.size).to eq(1)
+    expect(messages.first.value).to include('order_id' => '123')
   end
 end
+```
 
-kafka.producer('orders') do |producer|
-  with_retry do
-    producer.send(order)
+### Testing Consumers
+
+```ruby
+require 'kafka_do/testing'
+
+RSpec.describe OrderProcessor do
+  before { KafkaDo::Testing.reset! }
+
+  it 'processes orders' do
+    # Seed test data
+    KafkaDo::Testing.produce_messages('orders', [
+      { value: '{"order_id":"123","amount":99.99}', key: 'cust-1' },
+      { value: '{"order_id":"124","amount":49.99}', key: 'cust-2' }
+    ])
+
+    kafka = KafkaDo::Testing.client
+    consumer = kafka.consumer(group_id: 'test')
+    consumer.subscribe('orders')
+
+    processed = []
+    consumer.poll.each do |message|
+      processed << message.value
+    end
+
+    expect(processed.size).to eq(2)
+  end
+end
+```
+
+### Verifying RPC Calls
+
+```ruby
+require 'kafka_do/testing'
+
+RSpec.describe TopicManager do
+  before { KafkaDo::Testing.reset! }
+
+  it 'creates topic with correct config' do
+    KafkaDo::Testing.create_topic('existing-topic')
+
+    kafka = KafkaDo::Testing.client
+    admin = kafka.admin
+
+    admin.create_topic('new-topic', num_partitions: 3)
+
+    # Verify the call was made
+    expect(KafkaDo::Testing.called?('kafka.admin.createTopics')).to be true
+
+    call = KafkaDo::Testing.last_call('kafka.admin.createTopics')
+    expect(call[:args].first[:topics].first[:numPartitions]).to eq(3)
   end
 end
 ```
@@ -455,234 +524,159 @@ export KAFKA_DO_API_KEY=your-api-key
 ### Client Configuration
 
 ```ruby
-kafka = Kafka::Client.new(
-  url: 'https://kafka.do',
-  api_key: 'your-api-key',
+kafka = Kafka.new(
+  ['broker1:9092', 'broker2:9092'],
+  client_id: 'my-app',
+  connection_url: 'https://kafka.do',
   timeout: 30,
-  retries: 3
+  api_key: 'your-api-key'
 )
 ```
 
 ### Producer Configuration
 
 ```ruby
-kafka.producer('orders',
-  batch_size: 16_384,
-  linger_ms: 5,
-  compression: :gzip,
-  acks: :all,
-  retries: 3,
-  retry_backoff_ms: 100
-) do |producer|
-  producer.send(order)
-end
+producer = kafka.producer(
+  compression_codec: :gzip,   # :none, :gzip, :snappy, :lz4, :zstd
+  required_acks: -1,          # 0, 1, or -1 (all)
+  max_buffer_size: 1000,
+  max_buffer_bytesize: 10_000_000
+)
 ```
 
 ### Consumer Configuration
 
 ```ruby
-kafka.consumer('orders', group: 'processor',
-  offset: :latest,
-  auto_commit: false,
-  fetch_min_bytes: 1,
-  fetch_max_wait_ms: 500,
-  max_poll_records: 500,
-  session_timeout: 30_000,
-  heartbeat_interval: 3_000
+consumer = kafka.consumer(
+  group_id: 'my-group',
+  offset_commit_interval: 10,
+  offset_commit_threshold: 0,
+  heartbeat_interval: 10,
+  session_timeout: 30,
+  auto_offset_reset: :latest,   # :earliest or :latest
+  enable_auto_commit: true
 )
-```
-
-## Rails Integration
-
-### Configuration
-
-```ruby
-# config/initializers/kafka.rb
-Rails.application.config.kafka = Kafka::Client.new(
-  url: Rails.application.credentials.kafka[:url],
-  api_key: Rails.application.credentials.kafka[:api_key]
-)
-```
-
-### Model Callbacks
-
-```ruby
-class Order < ApplicationRecord
-  after_create :publish_to_kafka
-
-  private
-
-  def publish_to_kafka
-    Rails.application.config.kafka.producer('orders') do |producer|
-      producer.send(as_kafka_message)
-    end
-  end
-
-  def as_kafka_message
-    {
-      id: id,
-      customer_id: customer_id,
-      amount: amount.to_f,
-      created_at: created_at.iso8601
-    }
-  end
-end
-```
-
-### Background Job Consumer
-
-```ruby
-# app/jobs/kafka_consumer_job.rb
-class KafkaConsumerJob < ApplicationJob
-  queue_as :kafka
-
-  def perform
-    kafka = Rails.application.config.kafka
-
-    kafka.consumer('orders', group: 'rails-processor').each do |record|
-      ProcessOrderJob.perform_later(record.value)
-      record.commit
-    end
-  end
-end
-```
-
-## Testing
-
-### Mock Client
-
-```ruby
-require 'kafka-do/testing'
-
-RSpec.describe OrderProcessor do
-  let(:kafka) { Kafka::MockClient.new }
-
-  it 'processes all orders' do
-    # Seed test data
-    kafka.seed('orders', [
-      { order_id: '123', amount: 99.99 },
-      { order_id: '124', amount: 149.99 }
-    ])
-
-    # Process
-    processed = []
-    kafka.consumer('orders', group: 'test').take(2).each do |record|
-      processed << record.value
-      record.commit
-    end
-
-    expect(processed.size).to eq(2)
-    expect(processed.first[:order_id]).to eq('123')
-  end
-
-  it 'sends messages' do
-    kafka.producer('orders') do |producer|
-      producer.send(order_id: '125', amount: 99.99)
-    end
-
-    messages = kafka.messages('orders')
-    expect(messages.size).to eq(1)
-    expect(messages.first[:order_id]).to eq('125')
-  end
-end
-```
-
-### Integration Testing
-
-```ruby
-RSpec.describe 'Kafka Integration', :integration do
-  let(:kafka) do
-    Kafka::Client.new(
-      url: ENV['TEST_KAFKA_URL'],
-      api_key: ENV['TEST_KAFKA_API_KEY']
-    )
-  end
-
-  let(:topic) { "test-orders-#{SecureRandom.uuid}" }
-
-  after do
-    kafka.admin.delete_topic(topic) rescue nil
-  end
-
-  it 'produces and consumes messages' do
-    # Produce
-    kafka.producer(topic) do |producer|
-      producer.send(order_id: '123', amount: 99.99)
-    end
-
-    # Consume
-    record = kafka.consumer(topic, group: 'test').first
-    expect(record.value[:order_id]).to eq('123')
-  end
-end
 ```
 
 ## API Reference
 
-### Kafka::Client
+### KafkaDo::Kafka
 
 ```ruby
-class Kafka::Client
-  def initialize(url: nil, api_key: nil, timeout: 30, retries: 3)
-  def producer(topic, **options, &block)
-  def async_producer(topic, **options)
-  def consumer(topic, group:, **options)
-  def batch_consumer(topic, group:, **options)
-  def transaction(topic, &block)
-  def stream(topic)
+class KafkaDo::Kafka
+  # Constants
+  COMPRESSION_NONE, COMPRESSION_GZIP, COMPRESSION_SNAPPY, COMPRESSION_LZ4, COMPRESSION_ZSTD
+  OFFSET_EARLIEST, OFFSET_LATEST
+  ACKS_NONE, ACKS_LEADER, ACKS_ALL
+
+  def initialize(brokers = [], client_id: nil, connection_url: 'https://kafka.do', timeout: 30, api_key: nil)
+  def producer(**options)
+  def consumer(group_id:, **options)
   def admin
+  def stream(topic, group_id: nil)
+  def create_topic(topic, num_partitions: 1, replication_factor: 1, config: {})
+  def delete_topic(topic)
+  def topics
+  def partitions_for(topic)
   def close
+  def closed?
 end
 ```
 
-### Kafka::Producer
+### KafkaDo::Producer
 
 ```ruby
-class Kafka::Producer
-  def send(value, key: nil, headers: nil, partition: nil)
-  def send_batch(records)
+class KafkaDo::Producer
+  def produce(value, topic:, key: nil, partition: nil, partition_key: nil, headers: nil, create_time: nil)
+  def deliver_messages
+  def clear_buffer
+  def buffer_empty?
+  def shutdown
   def close
+  def closed?
 end
 ```
 
-### Kafka::Consumer
+### KafkaDo::Consumer
 
 ```ruby
-class Kafka::Consumer
+class KafkaDo::Consumer
   include Enumerable
 
-  def each(&block)
-  def take(n)
+  def subscribe(*topics, start_from_beginning: false)
+  def unsubscribe
+  def assign(*topic_partitions)
+  def assignment
+  def each_message(min_bytes: 1, max_bytes: 1_048_576, max_wait_time: 5, &block)
+  def poll(timeout_ms: 1000, max_records: 500)
+  def commit_offsets(message = nil)
+  def seek(topic_partition, offset)
+  def seek_to_beginning(*topic_partitions)
+  def seek_to_end(*topic_partitions)
+  def position(topic_partition)
+  def committed(*topic_partitions)
+  def pause(*topic_partitions)
+  def resume(*topic_partitions)
+  def paused
+  def stop
   def close
+  def closed?
 end
 ```
 
-### Kafka::Record
+### KafkaDo::Stream
 
 ```ruby
-class Kafka::Record
-  attr_reader :topic, :partition, :offset, :key, :value, :timestamp, :headers
+class KafkaDo::Stream
+  include Enumerable
 
-  def commit
-  def commit_async(&callback)
-end
-```
-
-### Kafka::Stream
-
-```ruby
-class Kafka::Stream
-  def filter(&block)
   def map(&block)
   def flat_map(&block)
-  def window(tumbling: nil, sliding: nil, session: nil)
+  def filter(&block)
+  def filter_not(&block)
+  def peek(&block)
+  def map_key(&block)
   def group_by(&block)
-  def reduce(initial, &block)
-  def count
-  def branch(*conditions)
-  def join(other, on:, window:)
-  def to(topic)
+  def group_by_key
+  def merge(other_stream)
+  def branch(*predicates)
+  def to(topic, key: nil, &block)
+  def for_each(&block)
   def each(&block)
+  def start(&block)
+  def stop
+  def stopped?
+end
+```
+
+### KafkaDo::Message
+
+```ruby
+class KafkaDo::Message
+  attr_reader :topic, :partition, :offset, :key, :value, :timestamp, :headers
+
+  def topic_partition
+end
+```
+
+### KafkaDo::TopicPartition
+
+```ruby
+class KafkaDo::TopicPartition
+  attr_reader :topic, :partition
+
+  def initialize(topic, partition)
+  def to_h
+end
+```
+
+### KafkaDo::RecordMetadata
+
+```ruby
+class KafkaDo::RecordMetadata
+  attr_reader :topic, :partition, :offset, :timestamp, :serialized_key_size, :serialized_value_size
+
+  def topic_partition
 end
 ```
 

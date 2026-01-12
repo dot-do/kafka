@@ -1,0 +1,798 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.xctest/Contents/MacOS/KafkaDoPackageTests",
+      "packagePath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift",
+      "productName" : "KafkaDoPackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.KafkaDo-arm64-apple-macosx26.0-debug.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/sources",
+      "importPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Admin.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Consumer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Kafka.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Message.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Producer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Stream.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "KafkaDo",
+      "moduleOutputPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDo.swiftmodule",
+      "objects" : [
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j28",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/include/KafkaDo-Swift.h",
+        "-swift-version",
+        "5",
+        "-enable-experimental-feature",
+        "StrictConcurrency",
+        "-I",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-L",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-plugin-path",
+        "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "swift"
+      ],
+      "outputFileMapPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDo.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Admin.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Consumer.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Kafka.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Message.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Producer.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Stream.swift"
+      ],
+      "tempsPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.KafkaDoPackageTests-arm64-apple-macosx26.0-debug.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/sources",
+      "importPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDoTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "KafkaDoPackageTests",
+      "moduleOutputPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDoPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j28",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/include/KafkaDoPackageTests-Swift.h",
+        "-I",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-L",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-plugin-path",
+        "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "swift"
+      ],
+      "outputFileMapPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDoPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.KafkaDoTests-arm64-apple-macosx26.0-debug.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/sources",
+      "importPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/AdminTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ConsumerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/IntegrationTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/KafkaTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MessageTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MockRPCClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ProducerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/StreamTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDo.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "KafkaDoTests",
+      "moduleOutputPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDoTests.swiftmodule",
+      "objects" : [
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/AdminTests.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/ConsumerTests.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/IntegrationTests.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/KafkaTests.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/MessageTests.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/MockRPCClient.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/ProducerTests.swift.o",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/StreamTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j28",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "5",
+        "-I",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-L",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-plugin-path",
+        "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "swift"
+      ],
+      "outputFileMapPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/AdminTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/ConsumerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/IntegrationTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/KafkaTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/MessageTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/MockRPCClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/ProducerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/StreamTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules/KafkaDoTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/AdminTests.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ConsumerTests.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/IntegrationTests.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/KafkaTests.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MessageTests.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MockRPCClient.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ProducerTests.swift",
+        "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/StreamTests.swift"
+      ],
+      "tempsPath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "KafkaDo" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "KafkaDo",
+      "-package-name",
+      "swift",
+      "-c",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Admin.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Consumer.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Kafka.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Message.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Producer.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Stream.swift",
+      "-I",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j28",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/include/KafkaDo-Swift.h",
+      "-swift-version",
+      "5",
+      "-enable-experimental-feature",
+      "StrictConcurrency",
+      "-I",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-L",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-plugin-path",
+      "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "swift",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ],
+    "KafkaDoPackageTests" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "KafkaDoPackageTests",
+      "-package-name",
+      "swift",
+      "-c",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j28",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/include/KafkaDoPackageTests-Swift.h",
+      "-I",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-L",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-plugin-path",
+      "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "swift",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ],
+    "KafkaDoTests" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "KafkaDoTests",
+      "-package-name",
+      "swift",
+      "-c",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/AdminTests.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ConsumerTests.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/IntegrationTests.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/KafkaTests.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MessageTests.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MockRPCClient.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ProducerTests.swift",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/StreamTests.swift",
+      "-I",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j28",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "5",
+      "-I",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-L",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-plugin-path",
+      "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "swift",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "KafkaDo" : [
+
+    ],
+    "KafkaDoPackageTests" : [
+      "KafkaDoTests",
+      "KafkaDo"
+    ],
+    "KafkaDoTests" : [
+      "KafkaDo"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Admin.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Consumer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Kafka.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Message.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Producer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Sources/KafkaDo/Stream.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/sources"
+    },
+    "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/sources"
+    },
+    "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Admin.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Consumer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Kafka.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Message.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Producer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDo.build/Stream.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/AdminTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/ConsumerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/IntegrationTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/KafkaTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/MessageTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/MockRPCClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/ProducerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/StreamTests.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoPackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/AdminTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ConsumerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/IntegrationTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/KafkaTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MessageTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/MockRPCClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/ProducerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/Tests/KafkaDoTests/StreamTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/KafkaDoTests.build/sources"
+    },
+    "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/nathanclevenger/projects/dot-do-capnweb/sdks/kafka/sdks/swift/.build/arm64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+    }
+  }
+}
