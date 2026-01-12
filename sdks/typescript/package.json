@@ -1,0 +1,46 @@
+{
+  "name": "kafka.do",
+  "version": "0.1.0",
+  "description": "Kafka.do SDK - KafkaJS-compatible API over rpc.do transport",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "kafka",
+    "messaging",
+    "event-streaming",
+    "rpc",
+    "dotdo",
+    "kafkajs"
+  ],
+  "author": "DotDo",
+  "license": "MIT",
+  "dependencies": {
+    "rpc.do": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "typescript": "^5.3.0",
+    "vitest": "^3.2.4"
+  }
+}
