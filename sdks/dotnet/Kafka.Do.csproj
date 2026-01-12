@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <PackageId>Kafka.Do</PackageId>
+    <RootNamespace>Kafka.Do</RootNamespace>
+    <AssemblyName>Kafka.Do</AssemblyName>
+    <Version>0.1.0</Version>
+    <Authors>DotDo Team</Authors>
+    <Company>DotDo</Company>
+    <Description>Kafka.do SDK - Confluent.Kafka compatible API with RPC transport for serverless Kafka operations</Description>
+    <PackageTags>kafka;rpc;dotdo;sdk;messaging;streaming</PackageTags>
+    <PackageProjectUrl>https://kafka.do</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dot-do/kafka</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <!-- SDK Source Files -->
+  <ItemGroup>
+    <Compile Include="src/**/*.cs" />
+  </ItemGroup>
+
+  <!-- Include README in package -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Dependencies -->
+  <ItemGroup>
+    <!-- JSON serialization -->
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
+
+</Project>
